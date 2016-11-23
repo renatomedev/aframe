@@ -19,7 +19,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     buttonColor: { default: '#FAFAFA' },  // Off-white.
     buttonHighlightColor: {default: '#22D1EE'},  // Light blue.
     model: {default: true},
-    rotationOffset: {default: null} // use null as sentinel value to auto-determine based on hand
+    rotationOffset: {default: -999} // use -999 as sentinel value to auto-determine based on hand
   },
 
   // buttonId
@@ -72,13 +72,14 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     // hand attribution for Oculus Touch is reliable at present
 
     // interrogate gamepads ourselves to find hand and idPrefix match
-    var controllers = this.system.controllers.filter(data.idPrefix);
+    var controllers = navigator.getGamepads && navigator.getGamepads(); // this fails... this.system.controllers;
     for (var cid = 0; cid < controllers.length; cid++) {
-      if (controllers[cid].hand === data.hand) {
-        el.setAttribute('tracked-controls', 'id', data.idPrefix);
-        el.setAttribute('tracked-controls', 'controller', cid);
-        el.setAttribute('tracked-controls', 'rotationOffset', data.rotationOffset !== null ? data.rotationOffset : data.hand === 'left' ? 90 : -90);
-        break;
+      if (controllers[cid].id.indexOf(data.idPrefix) === 0) {
+        if (controllers[cid].hand === data.hand) {
+          el.setAttribute('tracked-controls', {id: controllers[cid].id, controller: 0,
+            rotationOffset: data.rotationOffset !== -999 ? data.rotationOffset : data.hand === 'left' ? 90 : -90});
+          break;
+        }
       }
     }
     if (!data.model) { return; }

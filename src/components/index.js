@@ -1,3 +1,4 @@
+require('./auto-detect-controllers');
 require('./blend-character-model');
 require('./camera');
 require('./collada-model');
@@ -7,7 +8,6 @@ require('./hand-controls');
 require('./light');
 require('./look-controls');
 require('./material');
-require('./modeled-controllers');
 require('./obj-model');
 require('./oculus-touch-controls');
 require('./position');

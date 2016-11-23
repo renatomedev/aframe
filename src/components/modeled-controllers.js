@@ -1,0 +1,60 @@
+var registerComponent = require('../core/component').registerComponent;
+
+/**
+ * Vive Controls Component
+ * Interfaces with vive controls and maps Gamepad events to
+ * vive controller buttons: trackpad, trigger, grip, menu and system
+ * It loads a vive controller model and highlights the pressed buttons
+ */
+module.exports.Component = registerComponent('modeled-controllers', {
+  schema: {
+    // to be passed down to vendor-specific mapping
+    hand: {default: 'left'},
+    idPrefix: { default: '' },
+    model: { default: true },
+    rotationOffset: { default: null } // use null as sentinel value to auto-determine based on hand
+  },
+
+  // buttonId (common event prefixes)
+  // - trackpad
+  // - trigger ( intensity value from 0.5 to 1 )
+  // - grip
+  // - menu ( dispatch but better for menu options )
+  // - system ( never dispatched on this layer )
+
+  prefixMapping: {
+    'Oculus Touch': 'oculus-touch-controls',
+    'OpenVR Gamepad': 'vive-controls'
+  },
+
+  update: function () {
+    var el = this.el;
+    var data = this.data;
+
+    // interrogate gamepads ourselves to see what we need to specify
+    // (to do a priori, we need to figure out whether to use Vive or Rift)
+    var controllers = this.system.controllers.filter(data.idPrefix);
+    for (var cid = 0; cid < controllers.length; cid++) {
+      for (var k in this.prefixMapping) {
+        if (this.prefixMapping.hasOwnProperty(k)) {
+          // if this controller matches the prefix,
+          if (controllers[cid].id.indexOf(k) === 0) {
+            // inject the appropriate mapping for that prefix
+            var attr = this.prefixMapping[k];
+            el.setAttribute(attr, 'hand', data.hand);
+            if (data.idPrefix !== '') {
+              el.setAttribute(attr, 'idPrefix', data.idPrefix);
+            }
+            el.setAttribute(attr, 'model', data.model);
+            if (data.rotationOffset != null) {
+              el.setAttribute(attr, 'rotationOffset', data.rotationOffset);
+            }
+            // stop matching... assume no more than one vendor at a time (?!?)
+            cid = controllers.length;
+            break;
+          }
+        }
+      }
+    }
+  }
+});

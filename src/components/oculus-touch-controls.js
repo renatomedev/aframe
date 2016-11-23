@@ -1,14 +1,15 @@
 var registerComponent = require('../core/component').registerComponent;
 var bind = require('../utils/bind');
 
-var VIVE_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
-var VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
+// FIXME: need appropriate models, not the vive ones!
+var TOUCH_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
+var TOUCH_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
 
 /**
- * Vive Controls Component
- * Interfaces with vive controls and maps Gamepad events to
- * vive controller buttons: trackpad, trigger, grip, menu and system
- * It loads a vive controller model and highlights the pressed buttons
+ * Oculus Touch Controls Component
+ * Interfaces with Oculus Touch controllers and maps Gamepad events to
+ * common controller buttons: trackpad, trigger, grip, menu and system
+ * It loads a controller model and highlights the pressed buttons
  */
 module.exports.Component = registerComponent('oculus-touch-controls', {
   dependencies: ['tracked-controls'],
@@ -66,8 +67,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   update: function () {
     var el = this.el;
     var data = this.data;
-    var objUrl = 'url(' + VIVE_CONTROLLER_MODEL_OBJ_URL + ')';
-    var mtlUrl = 'url(' + VIVE_CONTROLLER_MODEL_OBJ_MTL + ')';
+    var objUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_URL + ')';
+    var mtlUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_MTL + ')';
 
     // hand attribution for Oculus Touch is reliable at present
 

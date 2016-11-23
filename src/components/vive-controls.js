@@ -6,9 +6,9 @@ var VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_c
 
 /**
  * Vive Controls Component
- * Interfaces with vive controls and maps Gamepad events to
- * vive controller buttons: trackpad, trigger, grip, menu and system
- * It loads a vive controller model and highlights the pressed buttons
+ * Interfaces with vive controllers and maps Gamepad events to
+ * common controller buttons: trackpad, trigger, grip, menu and system
+ * It loads a controller model and highlights the pressed buttons
  */
 module.exports.Component = registerComponent('vive-controls', {
   dependencies: ['tracked-controls'],

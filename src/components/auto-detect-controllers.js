@@ -1,14 +1,12 @@
 var registerComponent = require('../core/component').registerComponent;
 
 /**
- * Vive Controls Component
- * Interfaces with vive controls and maps Gamepad events to
- * vive controller buttons: trackpad, trigger, grip, menu and system
- * It loads a vive controller model and highlights the pressed buttons
+ * Auto-Detect Controllers Component
+ * Inspects available controllers and injects appropriate vendor-specific components
  */
-module.exports.Component = registerComponent('modeled-controllers', {
+module.exports.Component = registerComponent('auto-detect-controllers', {
   schema: {
-    // to be passed down to vendor-specific mapping
+    // to be passed down to vendor-specific components
     hand: {default: 'left'},
     model: {default: true},
     rotationOffset: {default: -999} // use -999 as sentinel value to auto-determine based on hand

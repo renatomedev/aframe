@@ -77,8 +77,11 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     for (var cid = 0; cid < controllers.length; cid++) {
       if (controllers[cid].id.indexOf(data.idPrefix) === 0) {
         if (controllers[cid].hand === data.hand) {
-          el.setAttribute('tracked-controls', {id: controllers[cid].id, controller: 0,
-            rotationOffset: data.rotationOffset !== -999 ? data.rotationOffset : data.hand === 'left' ? 90 : -90});
+          el.setAttribute('tracked-controls', {
+            id: controllers[cid].id,
+            controller: 0,
+            rotationOffset: data.rotationOffset !== -999 ? data.rotationOffset : data.hand === 'left' ? 90 : -90
+          });
           break;
         }
       }

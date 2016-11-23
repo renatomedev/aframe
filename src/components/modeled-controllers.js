@@ -10,9 +10,8 @@ module.exports.Component = registerComponent('modeled-controllers', {
   schema: {
     // to be passed down to vendor-specific mapping
     hand: {default: 'left'},
-    idPrefix: { default: '' },
-    model: { default: true },
-    rotationOffset: { default: null } // use null as sentinel value to auto-determine based on hand
+    model: {default: true},
+    rotationOffset: {default: -999} // use -999 as sentinel value to auto-determine based on hand
   },
 
   // buttonId (common event prefixes)
@@ -27,13 +26,15 @@ module.exports.Component = registerComponent('modeled-controllers', {
     'OpenVR Gamepad': 'vive-controls'
   },
 
+  init: function () { },
+
   update: function () {
     var el = this.el;
+    var controllers = navigator.getGamepads && navigator.getGamepads(); // this fails... this.system.controllers;
     var data = this.data;
 
     // interrogate gamepads ourselves to see what we need to specify
     // (to do a priori, we need to figure out whether to use Vive or Rift)
-    var controllers = this.system.controllers.filter(data.idPrefix);
     for (var cid = 0; cid < controllers.length; cid++) {
       for (var k in this.prefixMapping) {
         if (this.prefixMapping.hasOwnProperty(k)) {
@@ -41,14 +42,7 @@ module.exports.Component = registerComponent('modeled-controllers', {
           if (controllers[cid].id.indexOf(k) === 0) {
             // inject the appropriate mapping for that prefix
             var attr = this.prefixMapping[k];
-            el.setAttribute(attr, 'hand', data.hand);
-            if (data.idPrefix !== '') {
-              el.setAttribute(attr, 'idPrefix', data.idPrefix);
-            }
-            el.setAttribute(attr, 'model', data.model);
-            if (data.rotationOffset != null) {
-              el.setAttribute(attr, 'rotationOffset', data.rotationOffset);
-            }
+            el.setAttribute(attr, {hand: data.hand, model: data.model, rotationOffset: data.rotationOffset});
             // stop matching... assume no more than one vendor at a time (?!?)
             cid = controllers.length;
             break;

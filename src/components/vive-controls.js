@@ -72,22 +72,22 @@ module.exports.Component = registerComponent('vive-controls', {
     // unfortunately, hand attribution for OpenVR Gamepad is unreliable at present
     if (false) {
       // interrogate gamepads ourselves to find hand and idPrefix match
-      var controllers = this.system.controllers.filter(data.idPrefix);
+      var controllers = navigator.getGamepads && navigator.getGamepads(); // this fails... this.system.controllers;
+      var numopenvr = 0;
       for (var cid = 0; cid < controllers.length; cid++) {
-        if (controllers[cid].hand === data.hand) {
-          el.setAttribute('tracked-controls', 'id', data.idPrefix);
-          el.setAttribute('tracked-controls', 'controller', cid);
-          el.setAttribute('tracked-controls', 'rotationOffset', data.rotationOffset);
-          break;
+        if (controllers[cid].id.indexOf(data.idPrefix) === 0) {
+          if (controllers[cid].hand === data.hand) {
+            el.setAttribute('tracked-controls', {id: controllers[cid].id, controller: numopenvr, rotationOffset: data.rotationOffset});
+            break;
+          }
+          numopenvr++;
         }
       }
     } else {
       // handId: 0 - right, 1 - left, 2 - anything else...
       var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
       // if we have an OpenVR Gamepad, use the fixed mapping
-      el.setAttribute('tracked-controls', 'id', 'OpenVR Gamepad');
-      el.setAttribute('tracked-controls', 'controller', controller);
-      el.setAttribute('tracked-controls', 'rotationOffset', data.rotationOffset);
+      el.setAttribute('tracked-controls', {id: 'OpenVR Gamepad', controller: controller, rotationOffset: data.rotationOffset});
     }
     if (!data.model) { return; }
     el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});

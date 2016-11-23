@@ -1,25 +1,26 @@
 var registerComponent = require('../core/component').registerComponent;
 var bind = require('../utils/bind');
 
-var VIVE_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
-var VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
+// FIXME: need appropriate models, not the vive ones!
+var TOUCH_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
+var TOUCH_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
 
 /**
- * Vive Controls Component
- * Interfaces with vive controllers and maps Gamepad events to
+ * Oculus Touch Controls Component
+ * Interfaces with Oculus Touch controllers and maps Gamepad events to
  * common controller buttons: trackpad, trigger, grip, menu and system
  * It loads a controller model and highlights the pressed buttons
  */
-module.exports.Component = registerComponent('vive-controls', {
+module.exports.Component = registerComponent('oculus-touch-controls', {
   dependencies: ['tracked-controls'],
 
   schema: {
-    idPrefix: { default: 'OpenVR Gamepad' },
+    idPrefix: { default: 'Oculus Touch' },
     hand: {default: 'left'},
     buttonColor: { default: '#FAFAFA' },  // Off-white.
     buttonHighlightColor: {default: '#22D1EE'},  // Light blue.
     model: {default: true},
-    rotationOffset: {default: 0} // use -999 as sentinel value to auto-determine based on hand
+    rotationOffset: {default: -999} // use -999 as sentinel value to auto-determine based on hand
   },
 
   // buttonId
@@ -66,28 +67,21 @@ module.exports.Component = registerComponent('vive-controls', {
   update: function () {
     var el = this.el;
     var data = this.data;
-    var objUrl = 'url(' + VIVE_CONTROLLER_MODEL_OBJ_URL + ')';
-    var mtlUrl = 'url(' + VIVE_CONTROLLER_MODEL_OBJ_MTL + ')';
+    var objUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_URL + ')';
+    var mtlUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_MTL + ')';
 
-    // unfortunately, hand attribution for OpenVR Gamepad is unreliable at present
-    if (false) {
-      // interrogate gamepads ourselves to find hand and idPrefix match
-      var controllers = navigator.getGamepads && navigator.getGamepads(); // this fails... this.system.controllers;
-      var numopenvr = 0;
-      for (var cid = 0; cid < controllers.length; cid++) {
-        if (controllers[cid].id.indexOf(data.idPrefix) === 0) {
-          if (controllers[cid].hand === data.hand) {
-            el.setAttribute('tracked-controls', {id: controllers[cid].id, controller: numopenvr, rotationOffset: data.rotationOffset});
-            break;
-          }
-          numopenvr++;
+    // hand attribution for Oculus Touch is reliable at present
+
+    // interrogate gamepads ourselves to find hand and idPrefix match
+    var controllers = navigator.getGamepads && navigator.getGamepads(); // this fails... this.system.controllers;
+    for (var cid = 0; cid < controllers.length; cid++) {
+      if (controllers[cid].id.indexOf(data.idPrefix) === 0) {
+        if (controllers[cid].hand === data.hand) {
+          el.setAttribute('tracked-controls', {id: controllers[cid].id, controller: 0,
+            rotationOffset: data.rotationOffset !== -999 ? data.rotationOffset : data.hand === 'left' ? 90 : -90});
+          break;
         }
       }
-    } else {
-      // handId: 0 - right, 1 - left, 2 - anything else...
-      var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
-      // if we have an OpenVR Gamepad, use the fixed mapping
-      el.setAttribute('tracked-controls', {id: 'OpenVR Gamepad', controller: controller, rotationOffset: data.rotationOffset});
     }
     if (!data.model) { return; }
     el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});

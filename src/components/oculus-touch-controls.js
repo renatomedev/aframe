@@ -70,22 +70,16 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     var objUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_URL + ')';
     var mtlUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_MTL + ')';
 
-    // hand attribution for Oculus Touch is reliable at present
+    // handId: 0 - right, 1 - left, 2 - anything else...
+    var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
 
-    // interrogate gamepads ourselves to find hand and idPrefix match
-    var controllers = navigator.getGamepads && navigator.getGamepads(); // this fails... this.system.controllers;
-    for (var cid = 0; cid < controllers.length; cid++) {
-      if (controllers[cid].id.indexOf(data.idPrefix) === 0) {
-        if (controllers[cid].hand === data.hand) {
-          el.setAttribute('tracked-controls', {
-            id: controllers[cid].id,
-            controller: 0,
-            rotationOffset: data.rotationOffset !== -999 ? data.rotationOffset : data.hand === 'left' ? 90 : -90
-          });
-          break;
-        }
-      }
-    }
+    // since each hand is named differently, avoid enumeration
+    el.setAttribute('tracked-controls', {
+      id: controller === 0 ? 'Oculus Touch (Right)' : 'Oculus Touch (Left)',
+      controller: 0,
+      rotationOffset: data.rotationOffset !== -999 ? data.rotationOffset : controller === 1 ? 90 : -90
+    });
+
     if (!data.model) { return; }
     el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});
   },

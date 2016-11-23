@@ -14,7 +14,7 @@ var THREE = require('../lib/three');
 module.exports.Component = registerComponent('tracked-controls', {
   schema: {
     controller: {default: 0},
-    id: {default: 'OpenVR Gamepad'},
+    id: {default: ''},
     rotationOffset: {default: 0}
   },
 

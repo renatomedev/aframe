@@ -67,11 +67,24 @@ module.exports.Component = registerComponent('hand-controls', {
       // ... but as we only have two models, here we will use right hand
       modelUrl = 'url(' + RIGHT_HAND_MODEL_URL + ')';
     }
+/*
     el.setAttribute('auto-detect-controllers', {
       hand: hand,
       model: false,
       rotationOffset: hand === 'left' ? 90 : -90
     });
+*/
+    el.setAttribute('vive-controls', {
+      hand: hand,
+      model: false,
+      rotationOffset: hand === 'left' ? 90 : -90
+    });
+    el.setAttribute('oculus-touch-controls', {
+      hand: hand,
+      model: false,
+      rotationOffset: hand === 'left' ? 90 : -90
+    });
+
     el.setAttribute('blend-character-model', modelUrl);
   },
 

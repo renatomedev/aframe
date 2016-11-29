@@ -58380,6 +58380,7 @@ module.exports.Component = registerComponent('material', {
   updateBehavior: function () {
     var schema = this.schema;
     var self = this;
+    var sceneEl = this.el.sceneEl;
     var tickProperties = {};
     var tick = function (time, delta) {
       var keys = Object.keys(tickProperties);
@@ -58395,6 +58396,12 @@ module.exports.Component = registerComponent('material', {
         tickProperties[key] = true;
       }
     });
+    if (!sceneEl) { return; }
+    if (!this.tick) {
+      sceneEl.removeBehavior(this);
+    } else {
+      sceneEl.addBehavior(this);
+    }
   },
 
   updateShader: function (shaderName) {
@@ -61872,12 +61879,10 @@ var proto = Object.create(ANode.prototype, {
 
       if (this.hasLoaded) { return; }
 
-      ANode.prototype.load.call(this, entityLoadCallback);
-      // Entity load.
-      function entityLoadCallback () {
+      ANode.prototype.load.call(this, function entityLoadCallback () {
         self.updateComponents();
         if (self.isScene || self.parentEl.isPlaying) { self.play(); }
-      }
+      });
     },
     writable: window.debug
   },
@@ -61926,13 +61931,16 @@ var proto = Object.create(ANode.prototype, {
       var componentId = componentInfo[1];
       var componentName = componentInfo[0];
       var isComponentDefined = checkComponentDefined(this, attrName) || data !== undefined;
-      // Check if component is registered and whether component should be initialized.
-      if (!COMPONENTS[componentName] ||
-          (!isComponentDefined && !isDependency) ||
-          // If component already initialized.
-          (attrName in this.components)) {
-        return;
-      }
+
+      // Not a registered component.
+      if (!COMPONENTS[componentName]) { return; }
+
+      // Component is not a dependency and is undefined.
+      // If a component is a dependency, then it is okay to have no data.
+      if (!isComponentDefined && !isDependency) { return; }
+
+      // Component already initialized.
+      if (attrName in this.components) { return; }
 
       // Initialize dependencies first
       this.initComponentDependencies(componentName);
@@ -61977,6 +61985,7 @@ var proto = Object.create(ANode.prototype, {
 
       // No dependencies.
       dependencies = COMPONENTS[name].dependencies;
+
       if (!dependencies) { return; }
 
       // Initialize dependencies.
@@ -62014,48 +62023,59 @@ var proto = Object.create(ANode.prototype, {
   },
 
   /**
-   * Update all components.
-   * Build data using defined attributes, mixins, and defaults.
+   * Initialize or update all components.
+   * Build data using initial components, defined attributes, mixins, and defaults.
    * Update default components before the rest.
+   *
+   * @member {function} getExtraComponents - Can be implemented to include component data
+   *   from other sources (e.g., implemented by primitives).
    */
   updateComponents: {
     value: function () {
-      var elComponents = {};
-      var self = this;
+      var componentsToUpdate = {};
+      var extraComponents = {};
       var i;
-      if (!this.hasLoaded) { return; }
+      var self = this;
 
-      // Gather entity-defined components.
-      var attributes = this.attributes;
-      for (i = 0; i < attributes.length; ++i) {
-        addComponent(attributes[i].name);
-      }
+      if (!this.hasLoaded) { return; }
 
       // Gather mixin-defined components.
       getMixedInComponents(this).forEach(addComponent);
 
-      // Set default components.
-      Object.keys(this.defaultComponents).forEach(updateComponent);
+      // Gather from extra initial component data if defined (e.g., primitives).
+      if (this.getExtraComponents) {
+        extraComponents = this.getExtraComponents();
+        Object.keys(extraComponents).forEach(addComponent);
+      }
 
-      // Set rest of components.
-      Object.keys(elComponents).forEach(updateComponent);
+      // Gather entity-defined components.
+      for (i = 0; i < this.attributes.length; ++i) {
+        addComponent(this.attributes[i].name);
+      }
+
+      // Initialze or update default components first.
+      Object.keys(this.defaultComponents).forEach(doUpdateComponent);
+
+      // Initialize or update rest of components.
+      Object.keys(componentsToUpdate).forEach(doUpdateComponent);
 
       /**
-       * Add component to the list.
+       * Add component to the list to initialize or update.
        */
-      function addComponent (key) {
-        var name = key.split(MULTIPLE_COMPONENT_DELIMITER)[0];
+      function addComponent (componentName) {
+        var name = componentName.split(MULTIPLE_COMPONENT_DELIMITER)[0];
         if (!COMPONENTS[name]) { return; }
-        elComponents[key] = true;
+        componentsToUpdate[componentName] = true;
       }
 
       /**
-       * Update component with given name.
+       * Get component data and initialize or update component.
        */
-      function updateComponent (name) {
-        var attrValue = self.getDOMAttribute(name);
-        delete elComponents[name];
-        self.updateComponent(name, attrValue);
+      function doUpdateComponent (name) {
+        // Build defined component data.
+        var data = mergeComponentData(self.getDOMAttribute(name), extraComponents[name]);
+        delete componentsToUpdate[name];
+        self.updateComponent(name, data);
       }
     }
   },
@@ -62441,6 +62461,26 @@ function isComponentMixedIn (name, mixinEls) {
     if (inMixin) { break; }
   }
   return inMixin;
+}
+
+/**
+ * Given entity defined value, merge in extra data if necessary.
+ * Handle both single and multi-property components.
+ *
+ * @param {string} attrValue - Entity data.
+ * @param extraData - Entity data from another source to merge in.
+ */
+function mergeComponentData (attrValue, extraData) {
+  // Extra data not defined, just return attrValue.
+  if (!extraData) { return attrValue; }
+
+  // Merge multi-property data.
+  if (extraData.constructor === Object) {
+    return utils.extend(extraData, utils.styleParser.parse(attrValue || {}));
+  }
+
+  // Return data, precendence to the defined value.
+  return attrValue || extraData;
 }
 
 AEntity = registerElement('a-entity', {
@@ -63008,6 +63048,9 @@ var Component = module.exports.Component = function (el, attr, id) {
   this.id = id;
   this.attrName = this.name + (id ? '__' + id : '');
   this.updateCachedAttrValue(attr);
+
+  if (!el.hasLoaded) { return; }
+  this.updateProperties(this.attrValue);
 };
 
 Component.prototype = {
@@ -63250,8 +63293,6 @@ module.exports.registerComponent = function (name, definition) {
   }
   NewComponent = function (el, attr, id) {
     Component.call(this, el, attr, id);
-    if (!el.hasLoaded) { return; }
-    this.updateProperties(this.attrValue);
   };
 
   NewComponent.prototype = Object.create(Component.prototype, proto);
@@ -63309,7 +63350,9 @@ function buildData (el, name, attrName, schema, elData, silent) {
     data = {};
     Object.keys(schema).forEach(function applyDefault (key) {
       var defaultValue = schema[key].default;
-      data[key] = typeof defaultValue === 'object' ? utils.extend({}, defaultValue) : defaultValue;
+      data[key] = defaultValue && defaultValue.constructor === Object
+        ? utils.extend({}, defaultValue)
+        : defaultValue;
     });
   }
 
@@ -64352,9 +64395,13 @@ module.exports.stringifyProperties = function (propData, schema) {
  * Serialize a single property.
  */
 function stringifyProperty (value, propDefinition) {
+  // This function stringifies but it's used in a context where
+  // there's always second stringification pass. By returning the original
+  // value when it's not an object we save one unnecessary call
+  // to JSON.stringify.
   if (typeof value !== 'object') { return value; }
   // if there's no schema for the property we use standar JSON stringify
-  if (!propDefinition) { return JSON.stringify(value); }
+  if (!propDefinition || value === null) { return JSON.stringify(value); }
   return propDefinition.stringify(value);
 }
 module.exports.stringifyProperty = stringifyProperty;
@@ -64732,13 +64779,13 @@ _dereq_('./primitives/meshPrimitives');
 
 },{"./primitives/a-camera":78,"./primitives/a-collada-model":79,"./primitives/a-cursor":80,"./primitives/a-curvedimage":81,"./primitives/a-image":82,"./primitives/a-light":83,"./primitives/a-obj-model":84,"./primitives/a-sky":85,"./primitives/a-sound":86,"./primitives/a-video":87,"./primitives/a-videosphere":88,"./primitives/meshPrimitives":89}],77:[function(_dereq_,module,exports){
 var AEntity = _dereq_('../../core/a-entity');
-var components = _dereq_('../../core/component').components;
 var registerElement = _dereq_('../../core/a-register-element').registerElement;
 var utils = _dereq_('../../utils/');
 
 var debug = utils.debug;
 var setComponentProperty = utils.entity.setComponentProperty;
 var log = debug('extras:primitives:debug');
+var warn = debug('extras:primitives:warn');
 
 var primitives = module.exports.primitives = {};
 
@@ -64748,7 +64795,7 @@ module.exports.registerPrimitive = function registerPrimitive (name, definition)
 
   // Deprecation warning for defaultAttributes usage.
   if (definition.defaultAttributes) {
-    console.warn("The 'defaultAttributes' object is deprecated. Use 'defaultComponents' instead.");
+    warn("The 'defaultAttributes' object is deprecated. Use 'defaultComponents' instead.");
   }
 
   var primitive = registerElement(name, {
@@ -64759,21 +64806,17 @@ module.exports.registerPrimitive = function registerPrimitive (name, definition)
       deprecated: {value: definition.deprecated || null},
       deprecatedMappings: {value: definition.deprecatedMappings || {}},
       mappings: {value: definition.mappings || {}},
-      transforms: {value: definition.transforms || {}},
 
       createdCallback: {
         value: function () {
-          if (definition.deprecated) {
-            console.warn(definition.deprecated);
-          }
+          if (definition.deprecated) { console.warn(definition.deprecated); }
         }
       },
 
-      attachedCallback: {
+      getExtraComponents: {
         value: function () {
           var attr;
-          var Component;
-          var initialComponents;
+          var data;
           var i;
           var mapping;
           var mixins;
@@ -64781,52 +64824,36 @@ module.exports.registerPrimitive = function registerPrimitive (name, definition)
           var self = this;
 
           // Gather component data from default components.
-          initialComponents = utils.clone(this.defaultComponentsFromPrimitive);
+          data = utils.clone(this.defaultComponentsFromPrimitive);
 
-          // Gather component data from mixins.
+          // Factor in mixins to overwrite default components.
           mixins = this.getAttribute('mixin');
           if (mixins) {
             mixins = mixins.trim().split(' ');
-            mixins.forEach(function (mixinId) {
+            mixins.forEach(function applyMixin (mixinId) {
               var mixinComponents = self.sceneEl.querySelector('#' + mixinId).componentCache;
               Object.keys(mixinComponents).forEach(function setComponent (name) {
-                initialComponents[name] = utils.extendDeep(
-                  initialComponents[name], mixinComponents[name]);
+                data[name] = utils.extendDeep(data[name] || {}, mixinComponents[name]);
               });
             });
           }
 
+          // Gather component data from mappings.
           for (i = 0; i < this.attributes.length; i++) {
             attr = this.attributes[i];
-
-            // Gather component data from mappings.
             mapping = this.mappings[attr.name];
             if (mapping) {
               path = utils.entity.getComponentPropertyPath(mapping);
               if (path.constructor === Array) {
-                initialComponents[path[0]][path[1]] = attr.value;
+                data[path[0]][path[1]] = attr.value;
               } else {
-                initialComponents[path] = attr.value;
+                data[path] = attr.value;
               }
               continue;
             }
-
-            // Gather component data from components.
-            if (components[attr.name]) {
-              Component = components[attr.name];
-              if (Component.isSingleProp) {
-                initialComponents[attr.name] = attr.value;
-              } else {
-                initialComponents[attr.name] = utils.extendDeep(
-                  initialComponents[attr.name] || {}, Component.parse(attr.value || {}));
-              }
-            }
           }
 
-          // Set components.
-          Object.keys(initialComponents).forEach(function initComponent (componentName) {
-            self.setAttribute(componentName, initialComponents[componentName]);
-          });
+          return data;
         }
       },
 
@@ -64857,7 +64884,7 @@ module.exports.registerPrimitive = function registerPrimitive (name, definition)
   return primitive;
 };
 
-},{"../../core/a-entity":59,"../../core/a-register-element":62,"../../core/component":63,"../../utils/":124}],78:[function(_dereq_,module,exports){
+},{"../../core/a-entity":59,"../../core/a-register-element":62,"../../utils/":124}],78:[function(_dereq_,module,exports){
 var DEFAULT_CAMERA_HEIGHT = _dereq_('../../../constants/').DEFAULT_CAMERA_HEIGHT;
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 

@@ -30,6 +30,9 @@ var Component = module.exports.Component = function (el, attr, id) {
   this.id = id;
   this.attrName = this.name + (id ? '__' + id : '');
   this.updateCachedAttrValue(attr);
+
+  if (!el.hasLoaded) { return; }
+  this.updateProperties(this.attrValue);
 };
 
 Component.prototype = {
@@ -272,8 +275,6 @@ module.exports.registerComponent = function (name, definition) {
   }
   NewComponent = function (el, attr, id) {
     Component.call(this, el, attr, id);
-    if (!el.hasLoaded) { return; }
-    this.updateProperties(this.attrValue);
   };
 
   NewComponent.prototype = Object.create(Component.prototype, proto);
@@ -331,7 +332,9 @@ function buildData (el, name, attrName, schema, elData, silent) {
     data = {};
     Object.keys(schema).forEach(function applyDefault (key) {
       var defaultValue = schema[key].default;
-      data[key] = typeof defaultValue === 'object' ? utils.extend({}, defaultValue) : defaultValue;
+      data[key] = defaultValue && defaultValue.constructor === Object
+        ? utils.extend({}, defaultValue)
+        : defaultValue;
     });
   }
 

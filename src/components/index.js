@@ -1,4 +1,3 @@
-require('./auto-detect-controllers');
 require('./blend-character-model');
 require('./camera');
 require('./collada-model');

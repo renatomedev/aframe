@@ -58568,9 +58568,11 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.controllerPresent = false;
     this.everGotGamepadEvent = false;
     this.lastControllerCheck = 0;
+    this.onTrackedControlsTick = bind(this.onTrackedControlsTick, this);
+    this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
   },
 
-  startListening: function () {
+  addEventListeners: function () {
     var el = this.el;
     el.addEventListener('buttonchanged', this.onButtonChanged);
     el.addEventListener('buttondown', this.onButtonDown);
@@ -58578,7 +58580,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     el.addEventListener('model-loaded', this.onModelLoaded);
   },
 
-  stopListening: function () {
+  removeEventListeners: function () {
     var el = this.el;
     el.removeEventListener('buttonchanged', this.onButtonChanged);
     el.removeEventListener('buttondown', this.onButtonDown);
@@ -58589,7 +58591,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   checkIfControllerPresent: function () {
     var data = this.data;
     var isPresent = false;
-    trackedControlsUtils.enumerateGamepads(function (gamepad) {
+    trackedControlsUtils.enumerateControllers(function (gamepad) {
       if (gamepad.hand === data.hand) {
         isPresent = true;
       }
@@ -58599,20 +58601,22 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       this.controllerPresent = isPresent;
       if (isPresent) {
         this.injectTrackedControls(); // inject track-controls
-        this.startListening();
+        this.addEventListeners();
       } else {
-        this.stopListening();
+        this.removeEventListeners();
       }
     }
   },
 
   onGamepadConnected: function (evt) {
     this.everGotGamepadEvent = true;
+    this.removeTrackedControlsTickListener();
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
     this.everGotGamepadEvent = true;
+    this.removeTrackedControlsTickListener();
     this.checkIfControllerPresent();
   },
 
@@ -58620,12 +58624,14 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.checkIfControllerPresent();
     window.addEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
+    this.addTrackedControlsTickListener();
   },
 
   pause: function () {
     window.removeEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.removeEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
-    this.stopListening();
+    this.removeTrackedControlsTickListener();
+    this.removeEventListeners();
   },
 
   injectTrackedControls: function () {
@@ -58648,13 +58654,17 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});
   },
 
-  tick: function () {
+  addTrackedControlsTickListener: function () {
+    this.el.sceneEl.addEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  },
+
+  removeTrackedControlsTickListener: function () {
+    this.el.sceneEl.removeEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  },
+
+  onTrackedControlsTick: function () {
     if (!this.everGotGamepadEvent) {
-      var now = Date.now();
-      if (now >= this.lastControllerCheck + 1000) {
-        this.checkIfControllerPresent();
-        this.lastControllerCheck = now;
-      }
+      this.checkIfControllerPresent();
     }
   },
 
@@ -60217,9 +60227,11 @@ module.exports.Component = registerComponent('vive-controls', {
     this.controllerPresent = false;
     this.everGotGamepadEvent = false;
     this.lastControllerCheck = 0;
+    this.onTrackedControlsTick = bind(this.onTrackedControlsTick, this);
+    this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
   },
 
-  startListening: function () {
+  addEventListeners: function () {
     var el = this.el;
     el.addEventListener('buttonchanged', this.onButtonChanged);
     el.addEventListener('buttondown', this.onButtonDown);
@@ -60227,7 +60239,7 @@ module.exports.Component = registerComponent('vive-controls', {
     el.addEventListener('model-loaded', this.onModelLoaded);
   },
 
-  stopListening: function () {
+  removeEventListeners: function () {
     var el = this.el;
     el.removeEventListener('buttonchanged', this.onButtonChanged);
     el.removeEventListener('buttondown', this.onButtonDown);
@@ -60240,7 +60252,7 @@ module.exports.Component = registerComponent('vive-controls', {
     var isPresent = false;
     var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
     var numopenvr = 0;
-    trackedControlsUtils.enumerateGamepads(function (gamepad) {
+    trackedControlsUtils.enumerateControllers(function (gamepad) {
       if (numopenvr === controller) {
         isPresent = true;
       }
@@ -60251,20 +60263,22 @@ module.exports.Component = registerComponent('vive-controls', {
       this.controllerPresent = isPresent;
       if (isPresent) {
         this.injectTrackedControls(); // inject track-controls
-        this.startListening();
+        this.addEventListeners();
       } else {
-        this.stopListening();
+        this.removeEventListeners();
       }
     }
   },
 
   onGamepadConnected: function (evt) {
     this.everGotGamepadEvent = true;
+    this.removeTrackedControlsTickListener();
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
     this.everGotGamepadEvent = true;
+    this.removeTrackedControlsTickListener();
     this.checkIfControllerPresent();
   },
 
@@ -60272,12 +60286,14 @@ module.exports.Component = registerComponent('vive-controls', {
     this.checkIfControllerPresent();
     window.addEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
+    this.addTrackedControlsTickListener();
   },
 
   pause: function () {
     window.removeEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.removeEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
-    this.stopListening();
+    this.removeTrackedControlsTickListener();
+    this.removeEventListeners();
   },
 
   injectTrackedControls: function () {
@@ -60295,13 +60311,17 @@ module.exports.Component = registerComponent('vive-controls', {
     el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});
   },
 
-  tick: function () {
+  addTrackedControlsTickListener: function () {
+    this.el.sceneEl.addEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  },
+
+  removeTrackedControlsTickListener: function () {
+    this.el.sceneEl.removeEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  },
+
+  onTrackedControlsTick: function () {
     if (!this.everGotGamepadEvent) {
-      var now = Date.now();
-      if (now >= this.lastControllerCheck + 1000) {
-        this.checkIfControllerPresent();
-        this.lastControllerCheck = now;
-      }
+      this.checkIfControllerPresent();
     }
   },
 
@@ -66540,6 +66560,7 @@ module.exports.System = registerSystem('tracked-controls', {
       trackedControlsUtils.enumerateGamepads(function (gamepad) {
         if (gamepad && gamepad.pose) { controllers.push(gamepad); }
       });
+      this.sceneEl.emit('tracked-controls.tick', { timestamp: now, controllers: controllers });
     }
   }
 });
@@ -67360,6 +67381,24 @@ module.exports.transformKeysToCamelCase = transformKeysToCamelCase;
  */
 module.exports.enumerateGamepads = function (callback, idPrefix) {
   var gamepads = navigator.getGamepads && navigator.getGamepads();
+  if (!gamepads) { return; }
+  for (var i = 0; i < gamepads.length; ++i) {
+    var gamepad = gamepads[i];
+    if (!idPrefix || idPrefix === '' || gamepad.id.indexOf(idPrefix) === 0) {
+      callback(gamepad, i);
+    }
+  }
+};
+
+/**
+ * Enumerate controllers (as built by system tick, e.g. that have pose) and apply callback function to each.
+ *
+ * @param {object} callback - callback function that takes gamepad as argument.
+ * @param {object} idPrefix - prefix to match in gamepad id, if any.
+ */
+module.exports.enumerateControllers = function (callback, idPrefix) {
+  var sceneEl = document.querySelector('a-scene');
+  var gamepads = sceneEl && sceneEl.systems['tracked-controls'] && sceneEl.systems['tracked-controls'].controllers;
   if (!gamepads) { return; }
   for (var i = 0; i < gamepads.length; ++i) {
     var gamepad = gamepads[i];

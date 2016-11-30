@@ -12,6 +12,7 @@ module.exports.entity = require('./entity');
 module.exports.forceCanvasResizeSafariMobile = require('./forceCanvasResizeSafariMobile');
 module.exports.material = require('./material');
 module.exports.styleParser = require('./styleParser');
+module.exports.trackedControls = require('./tracked-controls');
 
 /**
  * Fires a custom DOM event.

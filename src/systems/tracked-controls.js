@@ -1,4 +1,5 @@
 var registerSystem = require('../core/system').registerSystem;
+var trackedControlsUtils = require('../utils/tracked-controls');
 
 /**
  * Tracked controls system.
@@ -21,16 +22,10 @@ module.exports.System = registerSystem('tracked-controls', {
     var now = Date.now();
     if (now >= this.lastControllerCheck + 1000) {
       this.lastControllerCheck = now;
-      // console.log('systems/tracked-controls tick lastControllerCheck ' + this.lastControllerCheck);
-      var gamepads = navigator.getGamepads && navigator.getGamepads();
-      var gamepad;
       var controllers = this.controllers = [];
-      var i;
-      if (!gamepads) { return; }
-      for (i = 0; i < gamepads.length; ++i) {
-        gamepad = gamepads[i];
+      trackedControlsUtils.enumerateGamepads(function (gamepad) {
         if (gamepad && gamepad.pose) { controllers.push(gamepad); }
-      }
+      });
     }
   }
 });

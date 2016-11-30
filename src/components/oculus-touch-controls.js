@@ -32,13 +32,24 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   // 3 - menu ( dispatch but better for menu options )
   // 4 - system ( never dispatched on this layer )
   mapping: {
-    axis0: 'thumbstick',
-    axis1: 'thumbstick',
-    button0: 'thumbstick',
-    button1: 'trigger',
-    button2: 'grip',
-    button3: 'menu',
-    button4: 'system'
+    'left': {
+      axis0: 'thumbstick',
+      axis1: 'thumbstick',
+      button0: 'thumbstick',
+      button1: 'trigger',
+      button2: 'grip',
+      button3: ['oculus-touch.X', 'menu'],
+      button4: ['oculus-touch.Y', 'system']
+    },
+    'right': {
+      axis0: 'thumbstick',
+      axis1: 'thumbstick',
+      button0: 'thumbstick',
+      button1: 'trigger',
+      button2: 'grip',
+      button3: ['oculus-touch.A', 'menu'],
+      button4: ['oculus-touch.B', 'system']
+    }
   },
 
   init: function () {
@@ -142,7 +153,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
 
   onButtonChanged: function (evt) {
-    var button = this.mapping['button' + evt.detail.id];
+    var button = this.mapping[this.data.hand]['button' + evt.detail.id];
     var buttonMeshes = this.buttonMeshes;
     var value;
     if (button !== 'trigger' || !buttonMeshes) { return; }
@@ -168,7 +179,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
 
   onButtonEvent: function (id, evtName) {
-    var buttonName = this.mapping['button' + id];
+    var buttonName = this.mapping[this.data.hand]['button' + id];
     var i;
     if (Array.isArray(buttonName)) {
       for (i = 0; i < buttonName.length; i++) {

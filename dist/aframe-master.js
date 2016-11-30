@@ -57654,23 +57654,14 @@ module.exports.Component = registerComponent('hand-controls', {
       // ... but as we only have two models, here we will use right hand
       modelUrl = 'url(' + RIGHT_HAND_MODEL_URL + ')';
     }
-/*
-    el.setAttribute('auto-detect-controllers', {
+
+    var controlConfiguration = {
       hand: hand,
       model: false,
       rotationOffset: hand === 'left' ? 90 : -90
-    });
-*/
-    el.setAttribute('vive-controls', {
-      hand: hand,
-      model: false,
-      rotationOffset: hand === 'left' ? 90 : -90
-    });
-    el.setAttribute('oculus-touch-controls', {
-      hand: hand,
-      model: false,
-      rotationOffset: hand === 'left' ? 90 : -90
-    });
+    };
+    el.setAttribute('vive-controls', controlConfiguration);
+    el.setAttribute('oculus-touch-controls', controlConfiguration);
 
     el.setAttribute('blend-character-model', modelUrl);
   },
@@ -58515,6 +58506,7 @@ module.exports.Component = registerComponent('obj-model', {
 },{"../core/component":62,"../lib/three":105,"../utils/debug":119}],32:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var bind = _dereq_('../utils/bind');
+var trackedControlsUtils = _dereq_('../utils/tracked-controls');
 
 // FIXME: need appropriate models, not the vive ones!
 var TOUCH_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
@@ -58530,7 +58522,6 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   dependencies: ['tracked-controls'],
 
   schema: {
-    idPrefix: { default: 'Oculus Touch' },
     hand: {default: 'left'},
     buttonColor: { default: '#FAFAFA' },  // Off-white.
     buttonHighlightColor: {default: '#22D1EE'},  // Light blue.
@@ -58538,20 +58529,33 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     rotationOffset: {default: -999} // use -999 as sentinel value to auto-determine based on hand
   },
 
+  idPrefix: 'Oculus Touch',
+
   // buttonId
-  // 0 - trackpad
+  // 0 - thumbstick
   // 1 - trigger ( intensity value from 0.5 to 1 )
   // 2 - grip
   // 3 - menu ( dispatch but better for menu options )
   // 4 - system ( never dispatched on this layer )
   mapping: {
-    axis0: 'trackpad',
-    axis1: 'trackpad',
-    button0: 'trackpad',
-    button1: 'trigger',
-    button2: 'grip',
-    button3: 'menu',
-    button4: 'system'
+    'left': {
+      axis0: 'thumbstick',
+      axis1: 'thumbstick',
+      button0: 'thumbstick',
+      button1: 'trigger',
+      button2: 'grip',
+      button3: ['oculus-touch.X', 'menu'],
+      button4: ['oculus-touch.Y', 'system']
+    },
+    'right': {
+      axis0: 'thumbstick',
+      axis1: 'thumbstick',
+      button0: 'thumbstick',
+      button1: 'trigger',
+      button2: 'grip',
+      button3: ['oculus-touch.A', 'menu'],
+      button4: ['oculus-touch.B', 'system']
+    }
   },
 
   init: function () {
@@ -58568,7 +58572,6 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
 
   startListening: function () {
     var el = this.el;
-    // console.log('startListening');
     el.addEventListener('buttonchanged', this.onButtonChanged);
     el.addEventListener('buttondown', this.onButtonDown);
     el.addEventListener('buttonup', this.onButtonUp);
@@ -58577,7 +58580,6 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
 
   stopListening: function () {
     var el = this.el;
-    // console.log('stopListening');
     el.removeEventListener('buttonchanged', this.onButtonChanged);
     el.removeEventListener('buttondown', this.onButtonDown);
     el.removeEventListener('buttonup', this.onButtonUp);
@@ -58585,20 +58587,14 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
 
   checkIfControllerPresent: function () {
-    // console.log('checkIfControllerPresent');
     var data = this.data;
     var isPresent = false;
-    var controllers = navigator.getGamepads && navigator.getGamepads();
-    if (controllers) {
-      for (var cid = 0; cid < controllers.length; cid++) {
-        if (controllers[cid].id.indexOf(data.idPrefix) === 0) {
-          if (controllers[cid].hand === data.hand) {
-            isPresent = true;
-            break;
-          }
-        }
+    trackedControlsUtils.enumerateGamepads(function (gamepad) {
+      if (gamepad.hand === data.hand) {
+        isPresent = true;
       }
-    }
+    }, this.idPrefix);
+
     if (isPresent !== this.controllerPresent) {
       this.controllerPresent = isPresent;
       if (isPresent) {
@@ -58611,20 +58607,17 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
 
   onGamepadConnected: function (evt) {
-    // console.log('onGamepadConnected');
     this.everGotGamepadEvent = true;
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
-    // console.log('onGamepadDisconnected');
     this.everGotGamepadEvent = true;
     this.checkIfControllerPresent();
   },
 
   play: function () {
     this.checkIfControllerPresent();
-    // on Chromium, these events do not fire, so poll
     window.addEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
   },
@@ -58636,7 +58629,6 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
 
   injectTrackedControls: function () {
-    // console.log('injectTrackedControls');
     var el = this.el;
     var data = this.data;
     var objUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_URL + ')';
@@ -58662,13 +58654,12 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       if (now >= this.lastControllerCheck + 1000) {
         this.checkIfControllerPresent();
         this.lastControllerCheck = now;
-        // console.log('lastControllerCheck ' + this.lastControllerCheck);
       }
     }
   },
 
   onButtonChanged: function (evt) {
-    var button = this.mapping['button' + evt.detail.id];
+    var button = this.mapping[this.data.hand]['button' + evt.detail.id];
     var buttonMeshes = this.buttonMeshes;
     var value;
     if (button !== 'trigger' || !buttonMeshes) { return; }
@@ -58694,10 +58685,23 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
 
   onButtonEvent: function (id, evtName) {
-    var buttonName = this.mapping['button' + id];
-    this.el.emit(buttonName + evtName);
+    var buttonName = this.mapping[this.data.hand]['button' + id];
+    var i;
+    if (Array.isArray(buttonName)) {
+      for (i = 0; i < buttonName.length; i++) {
+        this.el.emit(buttonName[i] + evtName);
+      }
+    } else {
+      this.el.emit(buttonName + evtName);
+    }
     if (!this.data.model) { return; }
-    this.updateModel(buttonName, evtName);
+    if (Array.isArray(buttonName)) {
+      for (i = 0; i < buttonName.length; i++) {
+        this.updateModel(buttonName[i], evtName);
+      }
+    } else {
+      this.updateModel(buttonName, evtName);
+    }
   },
 
   updateModel: function (buttonName, state) {
@@ -58713,7 +58717,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   }
 });
 
-},{"../core/component":62,"../utils/bind":117}],33:[function(_dereq_,module,exports){
+},{"../core/component":62,"../utils/bind":117,"../utils/tracked-controls":127}],33:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 
 module.exports.Component = registerComponent('position', {
@@ -59644,7 +59648,7 @@ function createStats (scene) {
   });
 }
 
-},{"../../../vendor/rStats":130,"../../../vendor/rStats.extras":129,"../../core/component":62,"../../lib/rStatsAframe":104,"../../utils":123}],46:[function(_dereq_,module,exports){
+},{"../../../vendor/rStats":131,"../../../vendor/rStats.extras":130,"../../core/component":62,"../../lib/rStatsAframe":104,"../../utils":123}],46:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../../core/component').registerComponent;
 var constants = _dereq_('../../constants/');
 var utils = _dereq_('../../utils/');
@@ -60163,6 +60167,7 @@ module.exports.Component = registerComponent('visible', {
 },{"../core/component":62}],50:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var bind = _dereq_('../utils/bind');
+var trackedControlsUtils = _dereq_('../utils/tracked-controls');
 
 var VIVE_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
 var VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
@@ -60177,13 +60182,14 @@ module.exports.Component = registerComponent('vive-controls', {
   dependencies: ['tracked-controls'],
 
   schema: {
-    idPrefix: { default: 'OpenVR Gamepad' },
     hand: {default: 'left'},
     buttonColor: { default: '#FAFAFA' },  // Off-white.
     buttonHighlightColor: {default: '#22D1EE'},  // Light blue.
     model: {default: true},
     rotationOffset: {default: 0} // use -999 as sentinel value to auto-determine based on hand
   },
+
+  idPrefix: 'OpenVR Gamepad',
 
   // buttonId
   // 0 - trackpad
@@ -60215,7 +60221,6 @@ module.exports.Component = registerComponent('vive-controls', {
 
   startListening: function () {
     var el = this.el;
-    // console.log('startListening');
     el.addEventListener('buttonchanged', this.onButtonChanged);
     el.addEventListener('buttondown', this.onButtonDown);
     el.addEventListener('buttonup', this.onButtonUp);
@@ -60224,7 +60229,6 @@ module.exports.Component = registerComponent('vive-controls', {
 
   stopListening: function () {
     var el = this.el;
-    // console.log('stopListening');
     el.removeEventListener('buttonchanged', this.onButtonChanged);
     el.removeEventListener('buttondown', this.onButtonDown);
     el.removeEventListener('buttonup', this.onButtonUp);
@@ -60232,23 +60236,17 @@ module.exports.Component = registerComponent('vive-controls', {
   },
 
   checkIfControllerPresent: function () {
-    // console.log('checkIfControllerPresent');
     var data = this.data;
     var isPresent = false;
-    var controllers = navigator.getGamepads && navigator.getGamepads();
-    if (controllers) {
-      var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
-      var numopenvr = 0;
-      for (var cid = 0; cid < controllers.length; cid++) {
-        if (controllers[cid].id.indexOf(data.idPrefix) === 0) {
-          if (numopenvr === controller) {
-            isPresent = true;
-            break;
-          }
-          numopenvr++;
-        }
+    var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
+    var numopenvr = 0;
+    trackedControlsUtils.enumerateGamepads(function (gamepad) {
+      if (numopenvr === controller) {
+        isPresent = true;
       }
-    }
+      numopenvr++;
+    }, this.idPrefix);
+
     if (isPresent !== this.controllerPresent) {
       this.controllerPresent = isPresent;
       if (isPresent) {
@@ -60261,20 +60259,17 @@ module.exports.Component = registerComponent('vive-controls', {
   },
 
   onGamepadConnected: function (evt) {
-    // console.log('onGamepadConnected');
     this.everGotGamepadEvent = true;
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
-    // console.log('onGamepadDisconnected');
     this.everGotGamepadEvent = true;
     this.checkIfControllerPresent();
   },
 
   play: function () {
     this.checkIfControllerPresent();
-    // on Chromium, these events do not fire, so poll
     window.addEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
   },
@@ -60286,31 +60281,11 @@ module.exports.Component = registerComponent('vive-controls', {
   },
 
   injectTrackedControls: function () {
-    // console.log('injectTrackedControls');
     var el = this.el;
     var data = this.data;
     var objUrl = 'url(' + VIVE_CONTROLLER_MODEL_OBJ_URL + ')';
     var mtlUrl = 'url(' + VIVE_CONTROLLER_MODEL_OBJ_MTL + ')';
 
-    // unfortunately, hand attribution for OpenVR Gamepad is unreliable at present
-/*
-      // interrogate gamepads ourselves to find hand and idPrefix match
-      var controllers = navigator.getGamepads && navigator.getGamepads(); // this fails... this.system.controllers;
-      var numopenvr = 0;
-      for (var cid = 0; cid < controllers.length; cid++) {
-        if (controllers[cid].id.indexOf(data.idPrefix) === 0) {
-          if (controllers[cid].hand === data.hand) {
-            el.setAttribute('tracked-controls', {
-              id: controllers[cid].id,
-              controller: numopenvr,
-              rotationOffset: data.rotationOffset
-            });
-            break;
-          }
-          numopenvr++;
-        }
-      }
-*/
     // handId: 0 - right, 1 - left, 2 - anything else...
     var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
     // if we have an OpenVR Gamepad, use the fixed mapping
@@ -60326,7 +60301,6 @@ module.exports.Component = registerComponent('vive-controls', {
       if (now >= this.lastControllerCheck + 1000) {
         this.checkIfControllerPresent();
         this.lastControllerCheck = now;
-        // console.log('lastControllerCheck ' + this.lastControllerCheck);
       }
     }
   },
@@ -60359,9 +60333,22 @@ module.exports.Component = registerComponent('vive-controls', {
 
   onButtonEvent: function (id, evtName) {
     var buttonName = this.mapping['button' + id];
-    this.el.emit(buttonName + evtName);
+    var i;
+    if (Array.isArray(buttonName)) {
+      for (i = 0; i < buttonName.length; i++) {
+        this.el.emit(buttonName[i] + evtName);
+      }
+    } else {
+      this.el.emit(buttonName + evtName);
+    }
     if (!this.data.model) { return; }
-    this.updateModel(buttonName, evtName);
+    if (Array.isArray(buttonName)) {
+      for (i = 0; i < buttonName.length; i++) {
+        this.updateModel(buttonName[i], evtName);
+      }
+    } else {
+      this.updateModel(buttonName, evtName);
+    }
   },
 
   updateModel: function (buttonName, state) {
@@ -60377,7 +60364,7 @@ module.exports.Component = registerComponent('vive-controls', {
   }
 });
 
-},{"../core/component":62,"../utils/bind":117}],51:[function(_dereq_,module,exports){
+},{"../core/component":62,"../utils/bind":117,"../utils/tracked-controls":127}],51:[function(_dereq_,module,exports){
 var KEYCODE_TO_CODE = _dereq_('../constants').keyboardevent.KEYCODE_TO_CODE;
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
@@ -64187,7 +64174,7 @@ module.exports = function initWakelock (scene) {
   scene.addEventListener('exit-vr', function () { wakelock.release(); });
 };
 
-},{"../../../vendor/wakelock/wakelock":132}],69:[function(_dereq_,module,exports){
+},{"../../../vendor/wakelock/wakelock":133}],69:[function(_dereq_,module,exports){
 var debug = _dereq_('../utils/debug');
 var propertyTypes = _dereq_('./propertyTypes').propertyTypes;
 var warn = debug('core:schema:warn');
@@ -65606,7 +65593,7 @@ module.exports = THREE;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../../vendor/VRControls":127,"../../vendor/VREffect":128,"three":17,"three/examples/js/BlendCharacter":13,"three/examples/js/loaders/ColladaLoader":14,"three/examples/js/loaders/MTLLoader":15,"three/examples/js/loaders/OBJLoader":16}],106:[function(_dereq_,module,exports){
+},{"../../vendor/VRControls":128,"../../vendor/VREffect":129,"three":17,"three/examples/js/BlendCharacter":13,"three/examples/js/loaders/ColladaLoader":14,"three/examples/js/loaders/MTLLoader":15,"three/examples/js/loaders/OBJLoader":16}],106:[function(_dereq_,module,exports){
 var registerShader = _dereq_('../core/shader').registerShader;
 var THREE = _dereq_('../lib/three');
 var utils = _dereq_('../utils/');
@@ -66526,6 +66513,7 @@ function fixVideoAttributes (videoEl) {
 
 },{"../core/system":71,"../lib/three":105,"../utils/":123}],116:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
+var trackedControlsUtils = _dereq_('../utils/tracked-controls');
 
 /**
  * Tracked controls system.
@@ -66548,21 +66536,15 @@ module.exports.System = registerSystem('tracked-controls', {
     var now = Date.now();
     if (now >= this.lastControllerCheck + 1000) {
       this.lastControllerCheck = now;
-      // console.log('systems/tracked-controls tick lastControllerCheck ' + this.lastControllerCheck);
-      var gamepads = navigator.getGamepads && navigator.getGamepads();
-      var gamepad;
       var controllers = this.controllers = [];
-      var i;
-      if (!gamepads) { return; }
-      for (i = 0; i < gamepads.length; ++i) {
-        gamepad = gamepads[i];
+      trackedControlsUtils.enumerateGamepads(function (gamepad) {
         if (gamepad && gamepad.pose) { controllers.push(gamepad); }
-      }
+      });
     }
   }
 });
 
-},{"../core/system":71}],117:[function(_dereq_,module,exports){
+},{"../core/system":71,"../utils/tracked-controls":127}],117:[function(_dereq_,module,exports){
 /**
  * Faster version of Function.prototype.bind
  * @param {Function} fn - Function to wrap.
@@ -66903,6 +66885,7 @@ module.exports.entity = _dereq_('./entity');
 module.exports.forceCanvasResizeSafariMobile = _dereq_('./forceCanvasResizeSafariMobile');
 module.exports.material = _dereq_('./material');
 module.exports.styleParser = _dereq_('./styleParser');
+module.exports.trackedControls = _dereq_('./tracked-controls');
 
 module.exports.checkHeadsetConnected = function () {
   warn('`utils.checkHeadsetConnected` has moved to `utils.device.checkHeadsetConnected`');
@@ -67086,7 +67069,7 @@ module.exports.findAllScenes = function (el) {
 // Must be at bottom to avoid circular dependency.
 module.exports.srcLoader = _dereq_('./src-loader');
 
-},{"./bind":117,"./coordinates":118,"./debug":119,"./device":120,"./entity":121,"./forceCanvasResizeSafariMobile":122,"./material":124,"./src-loader":125,"./styleParser":126,"deep-assign":6,"object-assign":9}],124:[function(_dereq_,module,exports){
+},{"./bind":117,"./coordinates":118,"./debug":119,"./device":120,"./entity":121,"./forceCanvasResizeSafariMobile":122,"./material":124,"./src-loader":125,"./styleParser":126,"./tracked-controls":127,"deep-assign":6,"object-assign":9}],124:[function(_dereq_,module,exports){
 /**
  * Update `material.map` given `data.src`. For standard and flat shaders.
  *
@@ -67370,6 +67353,24 @@ module.exports.transformKeysToCamelCase = transformKeysToCamelCase;
 
 },{"style-attr":12}],127:[function(_dereq_,module,exports){
 /**
+ * Enumerate gamepads and apply callback function to each.
+ *
+ * @param {object} callback - callback function that takes gamepad as argument.
+ * @param {object} idPrefix - prefix to match in gamepad id, if any.
+ */
+module.exports.enumerateGamepads = function (callback, idPrefix) {
+  var gamepads = navigator.getGamepads && navigator.getGamepads();
+  if (!gamepads) { return; }
+  for (var i = 0; i < gamepads.length; ++i) {
+    var gamepad = gamepads[i];
+    if (!idPrefix || idPrefix === '' || gamepad.id.indexOf(idPrefix) === 0) {
+      callback(gamepad, i);
+    }
+  }
+};
+
+},{}],128:[function(_dereq_,module,exports){
+/**
  * @author dmarcos / https://github.com/dmarcos
  * @author mrdoob / http://mrdoob.com
  */
@@ -67543,7 +67544,7 @@ THREE.VRControls = function ( object, onError ) {
 
 };
 
-},{}],128:[function(_dereq_,module,exports){
+},{}],129:[function(_dereq_,module,exports){
 /**
  * @author dmarcos / https://github.com/dmarcos
  * @author mrdoob / http://mrdoob.com
@@ -68025,7 +68026,7 @@ THREE.VREffect = function ( renderer, onError ) {
 
 };
 
-},{}],129:[function(_dereq_,module,exports){
+},{}],130:[function(_dereq_,module,exports){
 window.glStats = function () {
 
     var _rS = null;
@@ -68290,7 +68291,7 @@ if (typeof module === 'object') {
   };
 }
 
-},{}],130:[function(_dereq_,module,exports){
+},{}],131:[function(_dereq_,module,exports){
 // performance.now() polyfill from https://gist.github.com/paulirish/5438650
 'use strict';
 
@@ -68744,7 +68745,7 @@ if (typeof module === 'object') {
   module.exports = window.rStats;
 }
 
-},{}],131:[function(_dereq_,module,exports){
+},{}],132:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 Google Inc. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -68806,7 +68807,7 @@ Util.isLandscapeMode = function() {
 
 module.exports = Util;
 
-},{}],132:[function(_dereq_,module,exports){
+},{}],133:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 Google Inc. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -68882,6 +68883,6 @@ function getWakeLock() {
 
 module.exports = getWakeLock();
 
-},{"./util.js":131}]},{},[103])(103)
+},{"./util.js":132}]},{},[103])(103)
 });
 //# sourceMappingURL=aframe-master.js.map

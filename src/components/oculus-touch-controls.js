@@ -26,15 +26,15 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   idPrefix: 'Oculus Touch',
 
   // buttonId
-  // 0 - trackpad
+  // 0 - thumbstick
   // 1 - trigger ( intensity value from 0.5 to 1 )
   // 2 - grip
   // 3 - menu ( dispatch but better for menu options )
   // 4 - system ( never dispatched on this layer )
   mapping: {
-    axis0: 'trackpad',
-    axis1: 'trackpad',
-    button0: 'trackpad',
+    axis0: 'thumbstick',
+    axis1: 'thumbstick',
+    button0: 'thumbstick',
     button1: 'trigger',
     button2: 'grip',
     button3: 'menu',
@@ -169,9 +169,22 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
 
   onButtonEvent: function (id, evtName) {
     var buttonName = this.mapping['button' + id];
-    this.el.emit(buttonName + evtName);
+    var i;
+    if (Array.isArray(buttonName)) {
+      for (i = 0; i < buttonName.length; i++) {
+        this.el.emit(buttonName[i] + evtName);
+      }
+    } else {
+      this.el.emit(buttonName + evtName);
+    }
     if (!this.data.model) { return; }
-    this.updateModel(buttonName, evtName);
+    if (Array.isArray(buttonName)) {
+      for (i = 0; i < buttonName.length; i++) {
+        this.updateModel(buttonName[i], evtName);
+      }
+    } else {
+      this.updateModel(buttonName, evtName);
+    }
   },
 
   updateModel: function (buttonName, state) {

@@ -166,9 +166,22 @@ module.exports.Component = registerComponent('vive-controls', {
 
   onButtonEvent: function (id, evtName) {
     var buttonName = this.mapping['button' + id];
-    this.el.emit(buttonName + evtName);
+    var i;
+    if (Array.isArray(buttonName)) {
+      for (i = 0; i < buttonName.length; i++) {
+        this.el.emit(buttonName[i] + evtName);
+      }
+    } else {
+      this.el.emit(buttonName + evtName);
+    }
     if (!this.data.model) { return; }
-    this.updateModel(buttonName, evtName);
+    if (Array.isArray(buttonName)) {
+      for (i = 0; i < buttonName.length; i++) {
+        this.updateModel(buttonName[i], evtName);
+      }
+    } else {
+      this.updateModel(buttonName, evtName);
+    }
   },
 
   updateModel: function (buttonName, state) {

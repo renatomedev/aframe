@@ -75,7 +75,7 @@ module.exports.Component = registerComponent('vive-controls', {
     var isPresent = false;
     var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
     var numopenvr = 0;
-    trackedControlsUtils.enumerateGamepads(function (gamepad) {
+    trackedControlsUtils.enumerateControllers(function (gamepad) {
       if (numopenvr === controller) {
         isPresent = true;
       }

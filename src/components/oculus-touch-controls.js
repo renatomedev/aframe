@@ -1,5 +1,6 @@
 var registerComponent = require('../core/component').registerComponent;
 var bind = require('../utils/bind');
+var trackedControlsUtils = require('../utils/tracked-controls');
 
 // FIXME: need appropriate models, not the vive ones!
 var TOUCH_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
@@ -15,13 +16,14 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   dependencies: ['tracked-controls'],
 
   schema: {
-    idPrefix: { default: 'Oculus Touch' },
     hand: {default: 'left'},
     buttonColor: { default: '#FAFAFA' },  // Off-white.
     buttonHighlightColor: {default: '#22D1EE'},  // Light blue.
     model: {default: true},
     rotationOffset: {default: -999} // use -999 as sentinel value to auto-determine based on hand
   },
+
+  idPrefix: 'Oculus Touch',
 
   // buttonId
   // 0 - trackpad
@@ -53,7 +55,6 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
 
   startListening: function () {
     var el = this.el;
-    // console.log('startListening');
     el.addEventListener('buttonchanged', this.onButtonChanged);
     el.addEventListener('buttondown', this.onButtonDown);
     el.addEventListener('buttonup', this.onButtonUp);
@@ -62,7 +63,6 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
 
   stopListening: function () {
     var el = this.el;
-    // console.log('stopListening');
     el.removeEventListener('buttonchanged', this.onButtonChanged);
     el.removeEventListener('buttondown', this.onButtonDown);
     el.removeEventListener('buttonup', this.onButtonUp);
@@ -70,20 +70,14 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
 
   checkIfControllerPresent: function () {
-    // console.log('checkIfControllerPresent');
     var data = this.data;
     var isPresent = false;
-    var controllers = navigator.getGamepads && navigator.getGamepads();
-    if (controllers) {
-      for (var cid = 0; cid < controllers.length; cid++) {
-        if (controllers[cid].id.indexOf(data.idPrefix) === 0) {
-          if (controllers[cid].hand === data.hand) {
-            isPresent = true;
-            break;
-          }
-        }
+    trackedControlsUtils.enumerateGamepads(function (gamepad) {
+      if (gamepad.hand === data.hand) {
+        isPresent = true;
       }
-    }
+    }, this.idPrefix);
+
     if (isPresent !== this.controllerPresent) {
       this.controllerPresent = isPresent;
       if (isPresent) {
@@ -96,20 +90,17 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
 
   onGamepadConnected: function (evt) {
-    // console.log('onGamepadConnected');
     this.everGotGamepadEvent = true;
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
-    // console.log('onGamepadDisconnected');
     this.everGotGamepadEvent = true;
     this.checkIfControllerPresent();
   },
 
   play: function () {
     this.checkIfControllerPresent();
-    // on Chromium, these events do not fire, so poll
     window.addEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
   },
@@ -121,7 +112,6 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
 
   injectTrackedControls: function () {
-    // console.log('injectTrackedControls');
     var el = this.el;
     var data = this.data;
     var objUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_URL + ')';
@@ -147,7 +137,6 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       if (now >= this.lastControllerCheck + 1000) {
         this.checkIfControllerPresent();
         this.lastControllerCheck = now;
-        // console.log('lastControllerCheck ' + this.lastControllerCheck);
       }
     }
   },

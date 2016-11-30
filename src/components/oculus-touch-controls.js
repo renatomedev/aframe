@@ -62,6 +62,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.controllerPresent = false;
     this.everGotGamepadEvent = false;
     this.lastControllerCheck = 0;
+    this.onTrackedControlsTick = bind(this.onTrackedControlsTick, this);
+    this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
   },
 
   addEventListeners: function () {
@@ -102,11 +104,13 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
 
   onGamepadConnected: function (evt) {
     this.everGotGamepadEvent = true;
+    this.removeTrackedControlsTickListener();
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
     this.everGotGamepadEvent = true;
+    this.removeTrackedControlsTickListener();
     this.checkIfControllerPresent();
   },
 
@@ -114,11 +118,13 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.checkIfControllerPresent();
     window.addEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
+    this.addTrackedControlsTickListener();
   },
 
   pause: function () {
     window.removeEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.removeEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
+    this.removeTrackedControlsTickListener();
     this.removeEventListeners();
   },
 
@@ -142,13 +148,17 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});
   },
 
-  tick: function () {
+  addTrackedControlsTickListener: function () {
+    this.el.sceneEl.addEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  },
+
+  removeTrackedControlsTickListener: function () {
+    this.el.sceneEl.removeEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  },
+
+  onTrackedControlsTick: function () {
     if (!this.everGotGamepadEvent) {
-      var now = Date.now();
-      if (now >= this.lastControllerCheck + 1000) {
-        this.checkIfControllerPresent();
-        this.lastControllerCheck = now;
-      }
+      this.checkIfControllerPresent();
     }
   },
 

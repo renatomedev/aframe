@@ -5,7 +5,8 @@
  * @param {object} idPrefix - prefix to match in gamepad id, if any.
  */
 module.exports.enumerateGamepads = function (callback, idPrefix) {
-  var gamepads = navigator.getGamepads && navigator.getGamepads();
+  var sceneEl = document.querySelector('a-scene');
+  var gamepads = sceneEl && sceneEl.systems['tracked-controls'] && sceneEl.systems['tracked-controls'].controllers;
   if (!gamepads) { return; }
   for (var i = 0; i < gamepads.length; ++i) {
     var gamepad = gamepads[i];

@@ -26,6 +26,7 @@ module.exports.System = registerSystem('tracked-controls', {
       trackedControlsUtils.enumerateGamepads(function (gamepad) {
         if (gamepad && gamepad.pose) { controllers.push(gamepad); }
       });
+      this.sceneEl.emit('tracked-controls.tick', { timestamp: now, controllers: controllers });
     }
   }
 });

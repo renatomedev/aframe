@@ -62,9 +62,11 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.controllerPresent = false;
     this.everGotGamepadEvent = false;
     this.lastControllerCheck = 0;
+    this.onTrackedControlsTick = bind(this.onTrackedControlsTick, this);
+    this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
   },
 
-  startListening: function () {
+  addEventListeners: function () {
     var el = this.el;
     el.addEventListener('buttonchanged', this.onButtonChanged);
     el.addEventListener('buttondown', this.onButtonDown);
@@ -72,7 +74,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     el.addEventListener('model-loaded', this.onModelLoaded);
   },
 
-  stopListening: function () {
+  removeEventListeners: function () {
     var el = this.el;
     el.removeEventListener('buttonchanged', this.onButtonChanged);
     el.removeEventListener('buttondown', this.onButtonDown);
@@ -83,7 +85,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   checkIfControllerPresent: function () {
     var data = this.data;
     var isPresent = false;
-    trackedControlsUtils.enumerateGamepads(function (gamepad) {
+    trackedControlsUtils.enumerateControllers(function (gamepad) {
       if (gamepad.hand === data.hand) {
         isPresent = true;
       }
@@ -93,20 +95,22 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       this.controllerPresent = isPresent;
       if (isPresent) {
         this.injectTrackedControls(); // inject track-controls
-        this.startListening();
+        this.addEventListeners();
       } else {
-        this.stopListening();
+        this.removeEventListeners();
       }
     }
   },
 
   onGamepadConnected: function (evt) {
     this.everGotGamepadEvent = true;
+    this.removeTrackedControlsTickListener();
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
     this.everGotGamepadEvent = true;
+    this.removeTrackedControlsTickListener();
     this.checkIfControllerPresent();
   },
 
@@ -114,12 +118,14 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.checkIfControllerPresent();
     window.addEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
+    this.addTrackedControlsTickListener();
   },
 
   pause: function () {
     window.removeEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.removeEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
-    this.stopListening();
+    this.removeTrackedControlsTickListener();
+    this.removeEventListeners();
   },
 
   injectTrackedControls: function () {
@@ -142,13 +148,17 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});
   },
 
-  tick: function () {
+  addTrackedControlsTickListener: function () {
+    this.el.sceneEl.addEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  },
+
+  removeTrackedControlsTickListener: function () {
+    this.el.sceneEl.removeEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  },
+
+  onTrackedControlsTick: function () {
     if (!this.everGotGamepadEvent) {
-      var now = Date.now();
-      if (now >= this.lastControllerCheck + 1000) {
-        this.checkIfControllerPresent();
-        this.lastControllerCheck = now;
-      }
+      this.checkIfControllerPresent();
     }
   },
 

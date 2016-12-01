@@ -57817,7 +57817,7 @@ module.exports.Component = registerComponent('light', {
             break;
           }
 
-          case 'groundcolor': {
+          case 'groundColor': {
             light.groundColor.set(value);
             break;
           }

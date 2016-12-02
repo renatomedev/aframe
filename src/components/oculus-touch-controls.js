@@ -167,7 +167,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     var button = this.mapping[this.data.hand]['button' + evt.detail.id];
     var buttonMeshes = this.buttonMeshes;
     var value;
-    if (typeof button === 'undefined') { return; }
+    if (typeof button === 'undefined' || typeof buttonMeshes === 'undefined') { return; }
     if (button !== 'trigger' || !buttonMeshes) { return; }
     value = evt.detail.state.value;
     buttonMeshes.trigger.rotation.x = -value * (Math.PI / 12);

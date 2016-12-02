@@ -58526,7 +58526,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     buttonColor: { default: '#FAFAFA' },  // Off-white.
     buttonHighlightColor: {default: '#22D1EE'},  // Light blue.
     model: {default: true},
-    rotationOffset: {default: -999} // use -999 as sentinel value to auto-determine based on hand
+    rotationOffset: {default: 0} // no default offset; -999 is sentinel value to auto-determine based on hand
   },
 
   idPrefix: 'Oculus Touch',

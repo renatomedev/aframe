@@ -153,6 +153,7 @@ module.exports.Component = registerComponent('vive-controls', {
     var button = this.mapping['button' + evt.detail.id];
     var buttonMeshes = this.buttonMeshes;
     var value;
+    if (typeof button === 'undefined') { return; }
     if (button !== 'trigger' || !buttonMeshes) { return; }
     value = evt.detail.state.value;
     buttonMeshes.trigger.rotation.x = -value * (Math.PI / 12);

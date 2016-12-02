@@ -58570,6 +58570,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.lastControllerCheck = 0;
     this.onTrackedControlsTick = bind(this.onTrackedControlsTick, this);
     this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
+    this.removeTrackedControlsTickListener = bind(this.removeTrackedControlsTickListener, this);
   },
 
   addEventListeners: function () {
@@ -60229,6 +60230,7 @@ module.exports.Component = registerComponent('vive-controls', {
     this.lastControllerCheck = 0;
     this.onTrackedControlsTick = bind(this.onTrackedControlsTick, this);
     this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
+    this.removeTrackedControlsTickListener = bind(this.removeTrackedControlsTickListener, this);
   },
 
   addEventListeners: function () {

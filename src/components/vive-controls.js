@@ -53,6 +53,8 @@ module.exports.Component = registerComponent('vive-controls', {
     this.onTrackedControlsTick = bind(this.onTrackedControlsTick, this);
     this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
     this.removeTrackedControlsTickListener = bind(this.removeTrackedControlsTickListener, this);
+    this.onGamepadConnected = bind(this.onGamepadConnected, this);
+    this.onGamepadDisconnected = bind(this.onGamepadDisconnected, this);
   },
 
   addEventListeners: function () {

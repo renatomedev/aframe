@@ -65,6 +65,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.onTrackedControlsTick = bind(this.onTrackedControlsTick, this);
     this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
     this.removeTrackedControlsTickListener = bind(this.removeTrackedControlsTickListener, this);
+    this.onGamepadConnected = bind(this.onGamepadConnected, this);
+    this.onGamepadDisconnected = bind(this.onGamepadDisconnected, this);
   },
 
   addEventListeners: function () {

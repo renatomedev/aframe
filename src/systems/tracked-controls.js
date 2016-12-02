@@ -20,7 +20,7 @@ module.exports.System = registerSystem('tracked-controls', {
 
   tick: function () {
     var now = Date.now();
-    if (now >= this.lastControllerCheck + 1000) {
+    if (now >= this.lastControllerCheck + 10) {
       this.lastControllerCheck = now;
       var controllers = this.controllers = [];
       trackedControlsUtils.enumerateGamepads(function (gamepad) {

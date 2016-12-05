@@ -63,6 +63,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.onButtonChanged = bind(this.onButtonChanged, this);
     this.onButtonDown = function (evt) { self.onButtonEvent(evt.detail.id, 'down'); };
     this.onButtonUp = function (evt) { self.onButtonEvent(evt.detail.id, 'up'); };
+    this.onButtonTouchStart = function (evt) { self.onButtonEvent(evt.detail.id, 'touchstart'); };
+    this.onButtonTouchEnd = function (evt) { self.onButtonEvent(evt.detail.id, 'touchend'); };
     this.onModelLoaded = bind(this.onModelLoaded, this);
     this.controllerPresent = false;
     this.everGotGamepadEvent = false;
@@ -79,6 +81,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     el.addEventListener('buttonchanged', this.onButtonChanged);
     el.addEventListener('buttondown', this.onButtonDown);
     el.addEventListener('buttonup', this.onButtonUp);
+    el.addEventListener('touchstart', this.onButtonTouchStart);
+    el.addEventListener('touchend', this.onButtonTouchEnd);
     el.addEventListener('model-loaded', this.onModelLoaded);
   },
 
@@ -87,6 +91,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     el.removeEventListener('buttonchanged', this.onButtonChanged);
     el.removeEventListener('buttondown', this.onButtonDown);
     el.removeEventListener('buttonup', this.onButtonUp);
+    el.removeEventListener('touchstart', this.onButtonTouchStart);
+    el.removeEventListener('touchend', this.onButtonTouchEnd);
     el.removeEventListener('model-loaded', this.onModelLoaded);
   },
 
@@ -182,7 +188,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     var buttonMeshes = this.buttonMeshes;
     var value;
     if (typeof button === 'undefined' || typeof buttonMeshes === 'undefined') { return; }
-    if (button !== 'trigger' || !buttonMeshes) { return; }
+    if (button !== 'trigger' || !buttonMeshes || !buttonMeshes.trigger) { return; }
     value = evt.detail.state.value;
     buttonMeshes.trigger.rotation.x = -value * (Math.PI / 12);
   },

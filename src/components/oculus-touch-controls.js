@@ -156,7 +156,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     el.setAttribute('tracked-controls', {
       id: controller === 0 ? 'Oculus Touch (Right)' : 'Oculus Touch (Left)',
       controller: 0,
-      rotationOffset: 0 // data.rotationOffset !== -999 ? data.rotationOffset : controller === 1 ? 90 : -90
+      rotationOffset: data.rotationOffset !== -999 ? data.rotationOffset : controller === 1 ? 90 : -90
     });
 
     if (!data.model) { return; }

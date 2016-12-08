@@ -1,7 +1,7 @@
 var registerComponent = require('../core/component').registerComponent;
 
-var OCULUS_LEFT_HAND_MODEL_URL = 'https://cdn.aframe.io/controllers/oculus-hands/leftHand.json';
-var OCULUS_RIGHT_HAND_MODEL_URL = 'https://cdn.aframe.io/controllers/oculus-hands/rightHand.json';
+const OCULUS_LEFT_HAND_MODEL_URL = 'https://cdn.aframe.io/controllers/oculus-hands/leftHand.json';
+const OCULUS_RIGHT_HAND_MODEL_URL = 'https://cdn.aframe.io/controllers/oculus-hands/rightHand.json';
 
 /**
 *
@@ -32,6 +32,8 @@ module.exports.Component = registerComponent('hand-controls', {
     this.onGripTouchEnd = function () { self.handleButton('grip', 'touchend'); };
     this.onThumbstickDown = function () { self.handleButton('thumbstick', 'down'); };
     this.onThumbstickUp = function () { self.handleButton('thumbstick', 'up'); };
+    this.onAorXTouchStart = function () { self.handleButton('AorX', 'touchstart'); };
+    this.onAorXTouchEnd = function () { self.handleButton('AorX', 'touchend'); };
     this.onMenuTouchStart = function () { self.handleButton('menu', 'touchstart'); };
     this.onMenuTouchEnd = function () { self.handleButton('menu', 'touchend'); };
     this.onSurfaceTouchStart = function () { self.handleButton('surface', 'touchstart'); };
@@ -60,6 +62,8 @@ module.exports.Component = registerComponent('hand-controls', {
     el.addEventListener('griptouchend', this.onGripTouchEnd);
     el.addEventListener('thumbstickdown', this.onThumbstickDown);
     el.addEventListener('thumbstickup', this.onThumbstickUp);
+    el.addEventListener('oculus-touch.A-or-Xtouchstart', this.onAorXTouchStart);
+    el.addEventListener('oculus-touch.A-or-Xtouchend', this.onAorXTouchEnd);
     el.addEventListener('menutouchstart', this.onMenuTouchStart);
     el.addEventListener('menutouchend', this.onMenuTouchEnd);
     el.addEventListener('surfacetouchstart', this.onSurfaceTouchStart);
@@ -80,6 +84,9 @@ module.exports.Component = registerComponent('hand-controls', {
     el.removeEventListener('griptouchend', this.onGripTouchEnd);
     el.removeEventListener('thumbstickdown', this.onThumbstickDown);
     el.removeEventListener('thumbstickup', this.onThumbstickUp);
+    el.removeEventListener('oculus-touch.A-or-Xtouchstart', this.onAorXTouchStart);
+    el.removeEventListener('oculus-touch.A-or-Xtouchend', this.onAorXTouchEnd);
+    el.removeEventListener('menutouchend', this.onMenuTouchEnd);
     el.removeEventListener('menutouchstart', this.onMenuTouchStart);
     el.removeEventListener('menutouchend', this.onMenuTouchEnd);
     el.removeEventListener('surfacetouchstart', this.onSurfaceTouchStart);
@@ -117,14 +124,13 @@ module.exports.Component = registerComponent('hand-controls', {
    * @param {string} evt the event associated to the button
    */
   handleButton: function (button, evt) {
-    // var el = this.el;
     var isPressed = evt === 'down';
     var isTouched = evt === 'touchstart';
+    var shouldAnimate = true;
     switch (button) {
       case 'trackpad':
         if (isPressed === this.trackpadPressed) { return; }
         this.trackpadPressed = isPressed;
-        this.processAnimation();
         break;
       case 'trigger':
         if (evt.indexOf('touch') === 0) {
@@ -134,33 +140,37 @@ module.exports.Component = registerComponent('hand-controls', {
           if (isPressed === this.triggerPressed) { return; }
           this.triggerPressed = isPressed;
         }
-        this.processAnimation();
         break;
       case 'grip':
         if (isPressed === this.gripPressed) { return; }
         this.gripPressed = isPressed;
-        this.processAnimation();
         break;
       case 'thumbstick':
         if (isPressed === this.thumbstickPressed) { return; }
         this.thumbstickPressed = isPressed;
+        shouldAnimate = false;
+        break;
+      case 'AorX':
+        if (isTouched === this.AorXTouched) { return; }
+        this.AorXTouched = isTouched;
         break;
       case 'menu':
         if (isTouched === this.menuTouched) { return; }
         this.menuTouched = isTouched;
-        this.processAnimation();
         break;
       case 'surface':
         if (isTouched === this.surfaceTouched) { return; }
         this.surfaceTouched = isTouched;
-        this.processAnimation();
         break;
     }
+    if (shouldAnimate) { this.animate(); }
   },
 
-  processAnimation: function () {
+  animate: function () {
     if (this.gripPressed) {
-      if (this.surfacePressed || this.surfaceTouched || this.menuTouched || this.trackpadPressed || this.trackpadTouched) {
+      if (this.surfacePressed || this.surfaceTouched ||
+          this.menuTouched || this.AorXTouched ||
+          this.trackpadPressed || this.trackpadTouched) {
         if (!this.triggerPressed) { // trigger touch is currently broken, stuck true
           // point
           this.playAnimation('pointing', false);
@@ -189,7 +199,31 @@ module.exports.Component = registerComponent('hand-controls', {
     }
   },
 
-  /**
+  // map to old vive-specific event names for now
+  animationEventMapping: {
+    'press': 'grip',  // e.g. grip button down
+    'touch': 'point', // e.g. trigger button down
+    'thumb': 'thumb'  // e.g. thumbs up pose - grip button down, trackpad / surface buttons up
+  },
+
+  emitAnimationEvents: function (animation, reverse) {
+    var fwdAnimation = reverse ? '' : animation;
+    var lastFwdAnimation = this.lastFwdAnimation;
+    var eventName;
+    if (lastFwdAnimation !== fwdAnimation) {
+      eventName = this.animationEventMapping[lastFwdAnimation];
+      this.lastFwdAnimation = fwdAnimation;
+      if (eventName) {
+        this.el.emit(eventName + 'down');
+      }
+      eventName = this.animationEventMapping[fwdAnimation];
+      if (eventName) {
+        this.el.emit(eventName + 'up');
+      }
+    }
+  },
+
+/**
   * Play the hand animations based on button state.
   *
   * @param {string} animation - the name of the animation.
@@ -199,6 +233,7 @@ module.exports.Component = registerComponent('hand-controls', {
     var animationActive = this.animationActive;
     var timeScale = 1;
     var mesh = this.el.getObject3D('mesh');
+    this.emitAnimationEvents(animation, reverse);
     if (!mesh) { return; }
 
     // determine direction of the animation.

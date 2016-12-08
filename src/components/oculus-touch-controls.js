@@ -3,11 +3,12 @@ var bind = require('../utils/bind');
 var trackedControlsUtils = require('../utils/tracked-controls');
 
 // FIXME: need appropriate models, not the vive ones!
-// var TOUCH_CONTROLLER_MODEL_OBJ_PNG = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_col.png';
-var TOUCH_CONTROLLER_MODEL_OBJ_URL_L = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_left.obj';
-var TOUCH_CONTROLLER_MODEL_OBJ_MTL_L = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_left.mtl';
-var TOUCH_CONTROLLER_MODEL_OBJ_URL_R = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_right.obj';
-var TOUCH_CONTROLLER_MODEL_OBJ_MTL_R = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_right.mtl';
+const TOUCH_CONTROLLER_MODEL_OBJ_URL_L = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_left.obj';
+const TOUCH_CONTROLLER_MODEL_OBJ_MTL_L = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_left.mtl';
+const TOUCH_CONTROLLER_MODEL_OBJ_URL_R = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_right.obj';
+const TOUCH_CONTROLLER_MODEL_OBJ_MTL_R = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_right.mtl';
+
+const GAMEPAD_ID_PREFIX = 'Oculus Touch';
 
 /**
  * Oculus Touch Controls Component
@@ -26,8 +27,6 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     rotationOffset: {default: 0} // no default offset; -999 is sentinel value to auto-determine based on hand
   },
 
-  idPrefix: 'Oculus Touch',
-
   // buttonId
   // 0 - thumbstick
   // 1 - trigger ( intensity value from 0.5 to 1 )
@@ -41,8 +40,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       button0: 'thumbstick',
       button1: 'trigger',
       button2: 'grip',
-      button3: ['oculus-touch.X', 'menu'],
-      button4: ['oculus-touch.Y', 'system'],
+      button3: ['oculus-touch.A-or-X', 'oculus-touch.X'],
+      button4: ['oculus-touch.Y', 'menu'],
       button5: 'surface'
     },
     'right': {
@@ -51,8 +50,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       button0: 'thumbstick',
       button1: 'trigger',
       button2: 'grip',
-      button3: ['oculus-touch.A', 'menu'],
-      button4: ['oculus-touch.B', 'system'],
+      button3: ['oculus-touch.A-or-X', 'oculus-touch.A'],
+      button4: ['oculus-touch.B', 'menu'],
       button5: 'surface'
     }
   },
@@ -98,12 +97,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
 
   checkIfControllerPresent: function () {
     var data = this.data;
-    var isPresent = false;
-    trackedControlsUtils.enumerateControllers(function (gamepad) {
-      if (gamepad.hand === data.hand) {
-        isPresent = true;
-      }
-    }, this.idPrefix);
+    var isPresent = trackedControlsUtils.isControllerPresent(GAMEPAD_ID_PREFIX, { hand: data.hand });
 
     if (isPresent !== this.controllerPresent) {
       this.controllerPresent = isPresent;
@@ -142,31 +136,32 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.removeEventListeners();
   },
 
-  injectTrackedControls: function () {
-    var el = this.el;
-    var data = this.data;
+  addModel: function () {
     var objUrl, mtlUrl;
-
-    // handId: 0 - right, 1 - left, 2 - anything else...
-    var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
-
-    if (controller === 0) {
+    if (this.data.hand === 'right') {
       objUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_URL_R + ')';
       mtlUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_MTL_R + ')';
     } else {
       objUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_URL_L + ')';
       mtlUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_MTL_L + ')';
     }
+    this.el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});
+  },
+
+  injectTrackedControls: function () {
+    var el = this.el;
+    var data = this.data;
+    var isRightHand = data.hand === 'right';
 
     // since each hand is named differently, avoid enumeration
     el.setAttribute('tracked-controls', {
-      id: controller === 0 ? 'Oculus Touch (Right)' : 'Oculus Touch (Left)',
+      id: isRightHand ? 'Oculus Touch (Right)' : 'Oculus Touch (Left)',
       controller: 0,
-      rotationOffset: data.rotationOffset !== -999 ? data.rotationOffset : controller === 1 ? 90 : -90
+      rotationOffset: data.rotationOffset !== -999 ? data.rotationOffset : isRightHand ? -90 : 90
     });
 
     if (!data.model) { return; }
-    el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});
+    this.addModel();
   },
 
   addTrackedControlsTickListener: function () {

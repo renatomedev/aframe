@@ -141,31 +141,32 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.removeEventListeners();
   },
 
-  injectTrackedControls: function () {
-    var el = this.el;
-    var data = this.data;
+  addModel: function () {
     var objUrl, mtlUrl;
-
-    // handId: 0 - right, 1 - left, 2 - anything else...
-    var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
-
-    if (controller === 0) {
+    if (this.data.hand === 'right') {
       objUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_URL_R + ')';
       mtlUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_MTL_R + ')';
     } else {
       objUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_URL_L + ')';
       mtlUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_MTL_L + ')';
     }
+    this.el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});
+  },
+
+  injectTrackedControls: function () {
+    var el = this.el;
+    var data = this.data;
+    var isRightHand = data.hand === 'right';
 
     // since each hand is named differently, avoid enumeration
     el.setAttribute('tracked-controls', {
-      id: controller === 0 ? 'Oculus Touch (Right)' : 'Oculus Touch (Left)',
+      id: isRightHand ? 'Oculus Touch (Right)' : 'Oculus Touch (Left)',
       controller: 0,
-      rotationOffset: data.rotationOffset !== -999 ? data.rotationOffset : controller === 1 ? 90 : -90
+      rotationOffset: data.rotationOffset !== -999 ? data.rotationOffset : isRightHand ? -90 : 90
     });
 
     if (!data.model) { return; }
-    el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});
+    this.addModel();
   },
 
   addTrackedControlsTickListener: function () {

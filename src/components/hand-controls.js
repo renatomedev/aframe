@@ -214,11 +214,11 @@ module.exports.Component = registerComponent('hand-controls', {
       eventName = this.animationEventMapping[lastFwdAnimation];
       this.lastFwdAnimation = fwdAnimation;
       if (eventName) {
-        this.el.emit(eventName + 'down');
+        this.el.emit(eventName + (eventName === 'grip' ? 'open' : 'down'));
       }
       eventName = this.animationEventMapping[fwdAnimation];
       if (eventName) {
-        this.el.emit(eventName + 'up');
+        this.el.emit(eventName + (eventName === 'grip' ? 'close' : 'up'));
       }
     }
   },

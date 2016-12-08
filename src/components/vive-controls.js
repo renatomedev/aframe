@@ -5,7 +5,7 @@ var trackedControlsUtils = require('../utils/tracked-controls');
 const VIVE_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
 const VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
 
-const GAMEPAD_ID = 'OpenVR Gamepad';
+const GAMEPAD_ID_PREFIX = 'OpenVR Gamepad';
 
 /**
  * Vive Controls Component
@@ -75,15 +75,8 @@ module.exports.Component = registerComponent('vive-controls', {
 
   checkIfControllerPresent: function () {
     var data = this.data;
-    var isPresent = false;
     var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
-    var numopenvr = 0;
-    trackedControlsUtils.enumerateControllers(function (gamepad) {
-      if (numopenvr === controller) {
-        isPresent = true;
-      }
-      numopenvr++;
-    }, GAMEPAD_ID);
+    var isPresent = trackedControlsUtils.isControllerPresent(GAMEPAD_ID_PREFIX, { index: controller });
 
     if (isPresent !== this.controllerPresent) {
       this.controllerPresent = isPresent;

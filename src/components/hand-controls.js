@@ -117,14 +117,13 @@ module.exports.Component = registerComponent('hand-controls', {
    * @param {string} evt the event associated to the button
    */
   handleButton: function (button, evt) {
-    // var el = this.el;
     var isPressed = evt === 'down';
     var isTouched = evt === 'touchstart';
+    var shouldAnimate = true;
     switch (button) {
       case 'trackpad':
         if (isPressed === this.trackpadPressed) { return; }
         this.trackpadPressed = isPressed;
-        this.processAnimation();
         break;
       case 'trigger':
         if (evt.indexOf('touch') === 0) {
@@ -134,31 +133,29 @@ module.exports.Component = registerComponent('hand-controls', {
           if (isPressed === this.triggerPressed) { return; }
           this.triggerPressed = isPressed;
         }
-        this.processAnimation();
         break;
       case 'grip':
         if (isPressed === this.gripPressed) { return; }
         this.gripPressed = isPressed;
-        this.processAnimation();
         break;
       case 'thumbstick':
         if (isPressed === this.thumbstickPressed) { return; }
         this.thumbstickPressed = isPressed;
+        shouldAnimate = false;
         break;
       case 'menu':
         if (isTouched === this.menuTouched) { return; }
         this.menuTouched = isTouched;
-        this.processAnimation();
         break;
       case 'surface':
         if (isTouched === this.surfaceTouched) { return; }
         this.surfaceTouched = isTouched;
-        this.processAnimation();
         break;
     }
+    if (shouldAnimate) { this.animate(); }
   },
 
-  processAnimation: function () {
+  animate: function () {
     if (this.gripPressed) {
       if (this.surfacePressed || this.surfaceTouched || this.menuTouched || this.trackpadPressed || this.trackpadTouched) {
         if (!this.triggerPressed) { // trigger touch is currently broken, stuck true

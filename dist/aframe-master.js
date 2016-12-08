@@ -57587,8 +57587,8 @@ module.exports.Component = registerComponent('geometry', {
 },{"../core/component":62,"../core/geometry":63,"../lib/three":105,"../utils/debug":119}],26:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 
-var LEFT_HAND_MODEL_URL = 'https://cdn.aframe.io/controllers/hands/leftHand.json';
-var RIGHT_HAND_MODEL_URL = 'https://cdn.aframe.io/controllers/hands/rightHand.json';
+var OCULUS_LEFT_HAND_MODEL_URL = 'https://cdn.aframe.io/controllers/oculus-hands/leftHand.json';
+var OCULUS_RIGHT_HAND_MODEL_URL = 'https://cdn.aframe.io/controllers/oculus-hands/rightHand.json';
 
 /**
 *
@@ -57613,6 +57613,16 @@ module.exports.Component = registerComponent('hand-controls', {
     this.onTrackpadUp = function () { self.handleButton('trackpad', 'up'); };
     this.onTriggerDown = function () { self.handleButton('trigger', 'down'); };
     this.onTriggerUp = function () { self.handleButton('trigger', 'up'); };
+    this.onTriggerTouchStart = function () { self.handleButton('trigger', 'touchstart'); };
+    this.onTriggerTouchEnd = function () { self.handleButton('trigger', 'touchend'); };
+    this.onGripTouchStart = function () { self.handleButton('grip', 'touchstart'); };
+    this.onGripTouchEnd = function () { self.handleButton('grip', 'touchend'); };
+    this.onThumbstickDown = function () { self.handleButton('thumbstick', 'down'); };
+    this.onThumbstickUp = function () { self.handleButton('thumbstick', 'up'); };
+    this.onMenuTouchStart = function () { self.handleButton('menu', 'touchstart'); };
+    this.onMenuTouchEnd = function () { self.handleButton('menu', 'touchend'); };
+    this.onSurfaceTouchStart = function () { self.handleButton('surface', 'touchstart'); };
+    this.onSurfaceTouchEnd = function () { self.handleButton('surface', 'touchend'); };
   },
 
   play: function () {
@@ -57631,6 +57641,16 @@ module.exports.Component = registerComponent('hand-controls', {
     el.addEventListener('trackpadup', this.onTrackpadUp);
     el.addEventListener('triggerdown', this.onTriggerDown);
     el.addEventListener('triggerup', this.onTriggerUp);
+    el.addEventListener('triggertouchstart', this.onTriggerTouchStart);
+    el.addEventListener('triggertouchend', this.onTriggerTouchEnd);
+    el.addEventListener('griptouchstart', this.onGripTouchStart);
+    el.addEventListener('griptouchend', this.onGripTouchEnd);
+    el.addEventListener('thumbstickdown', this.onThumbstickDown);
+    el.addEventListener('thumbstickup', this.onThumbstickUp);
+    el.addEventListener('menutouchstart', this.onMenuTouchStart);
+    el.addEventListener('menutouchend', this.onMenuTouchEnd);
+    el.addEventListener('surfacetouchstart', this.onSurfaceTouchStart);
+    el.addEventListener('surfacetouchend', this.onSurfaceTouchEnd);
   },
 
   removeEventListeners: function () {
@@ -57641,6 +57661,16 @@ module.exports.Component = registerComponent('hand-controls', {
     el.removeEventListener('trackpadup', this.onTrackpadUp);
     el.removeEventListener('triggerdown', this.onTriggerDown);
     el.removeEventListener('triggerup', this.onTriggerUp);
+    el.removeEventListener('triggertouchstart', this.onTriggerTouchStart);
+    el.removeEventListener('triggertouchend', this.onTriggerTouchEnd);
+    el.removeEventListener('griptouchstart', this.onGripTouchStart);
+    el.removeEventListener('griptouchend', this.onGripTouchEnd);
+    el.removeEventListener('thumbstickdown', this.onThumbstickDown);
+    el.removeEventListener('thumbstickup', this.onThumbstickUp);
+    el.removeEventListener('menutouchstart', this.onMenuTouchStart);
+    el.removeEventListener('menutouchend', this.onMenuTouchEnd);
+    el.removeEventListener('surfacetouchstart', this.onSurfaceTouchStart);
+    el.removeEventListener('surfacetouchend', this.onSurfaceTouchEnd);
   },
 
   update: function () {
@@ -57648,11 +57678,13 @@ module.exports.Component = registerComponent('hand-controls', {
     var hand = this.data;
     var modelUrl;
     if (hand === 'left') {
-      modelUrl = 'url(' + LEFT_HAND_MODEL_URL + ')';
+      // modelUrl = 'url(' + LEFT_HAND_MODEL_URL + ')';
+      modelUrl = 'url(' + OCULUS_LEFT_HAND_MODEL_URL + ')';
     } else {
       // NOTE: in theory some controllers may not only 'left' or 'right'
       // ... but as we only have two models, here we will use right hand
-      modelUrl = 'url(' + RIGHT_HAND_MODEL_URL + ')';
+      // modelUrl = 'url(' + RIGHT_HAND_MODEL_URL + ')';
+      modelUrl = 'url(' + OCULUS_RIGHT_HAND_MODEL_URL + ')';
     }
 
     var controlConfiguration = {
@@ -57672,30 +57704,75 @@ module.exports.Component = registerComponent('hand-controls', {
    * @param {string} evt the event associated to the button
    */
   handleButton: function (button, evt) {
-    var el = this.el;
+    // var el = this.el;
     var isPressed = evt === 'down';
+    var isTouched = evt === 'touchstart';
     switch (button) {
       case 'trackpad':
         if (isPressed === this.trackpadPressed) { return; }
         this.trackpadPressed = isPressed;
-        this.playAnimation('thumb', !isPressed);
-        evt = isPressed ? 'thumbup' : 'thumbdown';
-        el.emit(evt);
+        this.processAnimation();
         break;
       case 'trigger':
-        if (isPressed === this.triggerPressed) { return; }
-        this.triggerPressed = isPressed;
-        this.playAnimation('pointing', !isPressed);
-        evt = isPressed ? 'pointup' : 'pointdown';
-        el.emit(evt);
+        if (evt.indexOf('touch') === 0) {
+          if (isTouched === this.triggerTouched) { return; }
+          this.triggerTouched = isTouched;
+        } else {
+          if (isPressed === this.triggerPressed) { return; }
+          this.triggerPressed = isPressed;
+        }
+        this.processAnimation();
         break;
       case 'grip':
         if (isPressed === this.gripPressed) { return; }
         this.gripPressed = isPressed;
-        this.playAnimation('close', !isPressed);
-        evt = isPressed ? 'gripclose' : 'gripopen';
-        el.emit(evt);
+        this.processAnimation();
         break;
+      case 'thumbstick':
+        if (isPressed === this.thumbstickPressed) { return; }
+        this.thumbstickPressed = isPressed;
+        break;
+      case 'menu':
+        if (isTouched === this.menuTouched) { return; }
+        this.menuTouched = isTouched;
+        this.processAnimation();
+        break;
+      case 'surface':
+        if (isTouched === this.surfaceTouched) { return; }
+        this.surfaceTouched = isTouched;
+        this.processAnimation();
+        break;
+    }
+  },
+
+  processAnimation: function () {
+    if (this.gripPressed) {
+      if (this.surfacePressed || this.surfaceTouched || this.menuTouched || this.trackpadPressed || this.trackpadTouched) {
+        if (!this.triggerPressed) { // trigger touch is currently broken, stuck true
+          // point
+          this.playAnimation('pointing', false);
+        } else {
+          // make a fist
+          this.playAnimation('press', false);
+        }
+      } else {
+        if (!this.triggerPressed) { // trigger touch is currently broken, stuck true
+          // pistol pose
+          this.playAnimation('pistol', false);
+        } else {
+          // thumbs up
+          this.playAnimation('thumb', false);
+        }
+      }
+    } else {
+      // grip not pressed
+      if (!this.triggerPressed) { // trigger touch is currently broken, stuck true
+        // TODO: seems as though we should have some additional poses here
+        this.playAnimation('touch', true);
+      } else {
+        // touch pose (?)
+        this.playAnimation('touch', false);
+      }
     }
   },
 

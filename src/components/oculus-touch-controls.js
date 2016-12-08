@@ -97,12 +97,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
 
   checkIfControllerPresent: function () {
     var data = this.data;
-    var isPresent = false;
-    trackedControlsUtils.enumerateControllers(function (gamepad) {
-      if (gamepad.hand === data.hand) {
-        isPresent = true;
-      }
-    }, GAMEPAD_ID_PREFIX);
+    var isPresent = trackedControlsUtils.isControllerPresent(GAMEPAD_ID_PREFIX, { hand: data.hand });
 
     if (isPresent !== this.controllerPresent) {
       this.controllerPresent = isPresent;

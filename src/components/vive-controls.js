@@ -2,8 +2,10 @@ var registerComponent = require('../core/component').registerComponent;
 var bind = require('../utils/bind');
 var trackedControlsUtils = require('../utils/tracked-controls');
 
-var VIVE_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
-var VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
+const VIVE_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
+const VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
+
+const GAMEPAD_ID = 'OpenVR Gamepad';
 
 /**
  * Vive Controls Component
@@ -21,8 +23,6 @@ module.exports.Component = registerComponent('vive-controls', {
     model: {default: true},
     rotationOffset: {default: 0} // use -999 as sentinel value to auto-determine based on hand
   },
-
-  idPrefix: 'OpenVR Gamepad',
 
   // buttonId
   // 0 - trackpad
@@ -83,7 +83,7 @@ module.exports.Component = registerComponent('vive-controls', {
         isPresent = true;
       }
       numopenvr++;
-    }, this.idPrefix);
+    }, GAMEPAD_ID);
 
     if (isPresent !== this.controllerPresent) {
       this.controllerPresent = isPresent;

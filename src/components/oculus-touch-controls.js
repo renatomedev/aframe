@@ -41,8 +41,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       button0: 'thumbstick',
       button1: 'trigger',
       button2: 'grip',
-      button3: ['oculus-touch.X', 'menu'],
-      button4: ['oculus-touch.Y', 'system'],
+      button3: 'oculus-touch.X',
+      button4: ['oculus-touch.Y', 'menu'],
       button5: 'surface'
     },
     'right': {
@@ -51,8 +51,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       button0: 'thumbstick',
       button1: 'trigger',
       button2: 'grip',
-      button3: ['oculus-touch.A', 'menu'],
-      button4: ['oculus-touch.B', 'system'],
+      button3: 'oculus-touch.A',
+      button4: ['oculus-touch.B', 'menu'],
       button5: 'surface'
     }
   },

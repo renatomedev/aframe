@@ -3,11 +3,12 @@ var bind = require('../utils/bind');
 var trackedControlsUtils = require('../utils/tracked-controls');
 
 // FIXME: need appropriate models, not the vive ones!
-// var TOUCH_CONTROLLER_MODEL_OBJ_PNG = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_col.png';
-var TOUCH_CONTROLLER_MODEL_OBJ_URL_L = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_left.obj';
-var TOUCH_CONTROLLER_MODEL_OBJ_MTL_L = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_left.mtl';
-var TOUCH_CONTROLLER_MODEL_OBJ_URL_R = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_right.obj';
-var TOUCH_CONTROLLER_MODEL_OBJ_MTL_R = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_right.mtl';
+const TOUCH_CONTROLLER_MODEL_OBJ_URL_L = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_left.obj';
+const TOUCH_CONTROLLER_MODEL_OBJ_MTL_L = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_left.mtl';
+const TOUCH_CONTROLLER_MODEL_OBJ_URL_R = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_right.obj';
+const TOUCH_CONTROLLER_MODEL_OBJ_MTL_R = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_right.mtl';
+
+const GAMEPAD_ID_PREFIX = 'Oculus Touch';
 
 /**
  * Oculus Touch Controls Component
@@ -25,8 +26,6 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     model: {default: true},
     rotationOffset: {default: 0} // no default offset; -999 is sentinel value to auto-determine based on hand
   },
-
-  idPrefix: 'Oculus Touch',
 
   // buttonId
   // 0 - thumbstick
@@ -103,7 +102,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       if (gamepad.hand === data.hand) {
         isPresent = true;
       }
-    }, this.idPrefix);
+    }, GAMEPAD_ID_PREFIX);
 
     if (isPresent !== this.controllerPresent) {
       this.controllerPresent = isPresent;

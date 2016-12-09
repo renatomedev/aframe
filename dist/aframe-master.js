@@ -57729,8 +57729,13 @@ module.exports.Component = registerComponent('hand-controls', {
         }
         break;
       case 'grip':
-        if (isPressed === this.gripPressed) { return; }
-        this.gripPressed = isPressed;
+        if (evt.indexOf('touch') === 0) {
+          if (isTouched === this.gripTouched) { return; }
+          this.gripTouched = isTouched;
+        } else {
+          if (isPressed === this.gripPressed) { return; }
+          this.gripPressed = isPressed;
+        }
         break;
       case 'thumbstick':
         if (isPressed === this.thumbstickPressed) { return; }
@@ -57758,7 +57763,7 @@ module.exports.Component = registerComponent('hand-controls', {
       if (this.surfacePressed || this.surfaceTouched ||
           this.menuTouched || this.AorXTouched ||
           this.trackpadPressed || this.trackpadTouched) {
-        if (!this.triggerPressed) { // trigger touch is currently broken, stuck true
+        if (!this.triggerPressed && !this.triggerTouched) {
           // point
           this.playAnimation('pointing', false);
         } else {
@@ -57766,7 +57771,7 @@ module.exports.Component = registerComponent('hand-controls', {
           this.playAnimation('press', false);
         }
       } else {
-        if (!this.triggerPressed) { // trigger touch is currently broken, stuck true
+        if (!this.triggerPressed && !this.triggerTouched) {
           // pistol pose
           this.playAnimation('pistol', false);
         } else {
@@ -57776,7 +57781,7 @@ module.exports.Component = registerComponent('hand-controls', {
       }
     } else {
       // grip not pressed
-      if (!this.triggerPressed) { // trigger touch is currently broken, stuck true
+      if (!this.triggerPressed && !this.triggerTouched) {
         // TODO: seems as though we should have some additional poses here
         this.playAnimation('touch', true);
       } else {
@@ -58628,6 +58633,8 @@ const TOUCH_CONTROLLER_MODEL_OBJ_MTL_R = 'https://cdn.rawgit.com/tbalouet/touch-
 
 const GAMEPAD_ID_PREFIX = 'Oculus Touch';
 
+const FAKE_TOUCH_THRESHOLD = 0.00001;
+
 /**
  * Oculus Touch Controls Component
  * Interfaces with Oculus Touch controllers and maps Gamepad events to
@@ -58635,8 +58642,6 @@ const GAMEPAD_ID_PREFIX = 'Oculus Touch';
  * It loads a controller model and highlights the pressed buttons
  */
 module.exports.Component = registerComponent('oculus-touch-controls', {
-  dependencies: ['tracked-controls'],
-
   schema: {
     hand: {default: 'left'},
     buttonColor: { default: '#FAFAFA' },  // Off-white.
@@ -58800,6 +58805,25 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     var button = this.mapping[this.data.hand]['button' + evt.detail.id];
     var buttonMeshes = this.buttonMeshes;
     var value;
+    // at the moment, if trigger or grip,
+    // touch events aren't happening (touched is stuck true);
+    // synthesize touch events from very low values
+    if (button === 'trigger' || button === 'grip') {
+      var lastValue = this['last-' + button + '-value'];
+      var lastFakeTouch = false;
+      if (lastValue) { lastFakeTouch = (lastValue >= FAKE_TOUCH_THRESHOLD); }
+      var thisValue = evt.detail.state.value;
+      var thisFakeTouch = false;
+      if (thisValue) { thisFakeTouch = (thisValue >= FAKE_TOUCH_THRESHOLD); }
+      this['last-' + button + '-value'] = thisValue;
+      if (thisFakeTouch !== lastFakeTouch) {
+        if (thisFakeTouch) {
+          this.onButtonTouchStart(evt);
+        } else {
+          this.onButtonTouchEnd(evt);
+        }
+      }
+    }
     if (typeof button === 'undefined' || typeof buttonMeshes === 'undefined') { return; }
     if (button !== 'trigger' || !buttonMeshes || !buttonMeshes.trigger) { return; }
     value = evt.detail.state.value;
@@ -60389,8 +60413,6 @@ const GAMEPAD_ID_PREFIX = 'OpenVR Gamepad';
  * It loads a controller model and highlights the pressed buttons
  */
 module.exports.Component = registerComponent('vive-controls', {
-  dependencies: ['tracked-controls'],
-
   schema: {
     hand: {default: 'left'},
     buttonColor: { default: '#FAFAFA' },  // Off-white.
@@ -66750,15 +66772,19 @@ module.exports.System = registerSystem('tracked-controls', {
     });
   },
 
+  rebuildControllerList: function () {
+    var controllers = this.controllers = [];
+    trackedControlsUtils.enumerateGamepads(function (gamepad) {
+      if (gamepad && gamepad.pose) { controllers.push(gamepad); }
+    });
+  },
+
   tick: function () {
     var now = Date.now();
     if (now >= this.lastControllerCheck + 10) {
       this.lastControllerCheck = now;
-      var controllers = this.controllers = [];
-      trackedControlsUtils.enumerateGamepads(function (gamepad) {
-        if (gamepad && gamepad.pose) { controllers.push(gamepad); }
-      });
-      this.sceneEl.emit('tracked-controls.tick', { timestamp: now, controllers: controllers });
+      this.rebuildControllerList();
+      this.sceneEl.emit('tracked-controls.tick', { timestamp: now, controllers: this.controllers });
     }
   }
 });
@@ -67616,20 +67642,25 @@ module.exports.isControllerPresent = function (idPrefix, queryObject) {
   var isMatch = false;
   var sceneEl = document.querySelector('a-scene');
   var gamepads = sceneEl && sceneEl.systems['tracked-controls'] && sceneEl.systems['tracked-controls'].controllers;
-  if (!gamepads) { return; }
-  var index = 0;
-  for (var i = 0; i < gamepads.length; ++i) {
-    var gamepad = gamepads[i];
-    var isPrefixMatch = (!idPrefix || idPrefix === '' || gamepad.id.indexOf(idPrefix) === 0);
-    isMatch = isPrefixMatch;
-    if (isMatch && queryObject.hand) {
-      isMatch = (gamepad.hand === queryObject.hand);
+  if ((!gamepads || gamepads.length === 0) && sceneEl && sceneEl.systems['tracked-controls']) {
+    sceneEl.systems['tracked-controls'].rebuildControllerList();
+    gamepads = sceneEl.systems['tracked-controls'].controllers;
+  }
+  if (gamepads) {
+    var index = 0;
+    for (var i = 0; i < gamepads.length; ++i) {
+      var gamepad = gamepads[i];
+      var isPrefixMatch = (!idPrefix || idPrefix === '' || gamepad.id.indexOf(idPrefix) === 0);
+      isMatch = isPrefixMatch;
+      if (isMatch && queryObject.hand) {
+        isMatch = (gamepad.hand === queryObject.hand);
+      }
+      if (isMatch && queryObject.index) {
+        isMatch = (index === queryObject.index); // need to use count of gamepads with idPrefix
+      }
+      if (isMatch) { break; }
+      if (isPrefixMatch) { index++; } // update count of gamepads with idPrefix
     }
-    if (isMatch && queryObject.index) {
-      isMatch = (index === queryObject.index); // need to use count of gamepads with idPrefix
-    }
-    if (isMatch) { break; }
-    if (isPrefixMatch) { index++; } // update count of gamepads with idPrefix
   }
   return isMatch;
 };

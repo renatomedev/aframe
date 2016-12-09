@@ -14,8 +14,6 @@ const GAMEPAD_ID_PREFIX = 'OpenVR Gamepad';
  * It loads a controller model and highlights the pressed buttons
  */
 module.exports.Component = registerComponent('vive-controls', {
-  dependencies: ['tracked-controls'],
-
   schema: {
     hand: {default: 'left'},
     buttonColor: { default: '#FAFAFA' },  // Off-white.

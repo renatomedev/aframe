@@ -24,6 +24,8 @@ module.exports.Component = registerComponent('hand-controls', {
     this.onGripUp = function () { self.handleButton('grip', 'up'); };
     this.onTrackpadDown = function () { self.handleButton('trackpad', 'down'); };
     this.onTrackpadUp = function () { self.handleButton('trackpad', 'up'); };
+    this.onTrackpadTouchStart = function () { self.handleButton('trackpad', 'touchstart'); };
+    this.onTrackpadTouchEnd = function () { self.handleButton('trackpad', 'touchend'); };
     this.onTriggerDown = function () { self.handleButton('trigger', 'down'); };
     this.onTriggerUp = function () { self.handleButton('trigger', 'up'); };
     this.onTriggerTouchStart = function () { self.handleButton('trigger', 'touchstart'); };
@@ -54,6 +56,8 @@ module.exports.Component = registerComponent('hand-controls', {
     el.addEventListener('gripup', this.onGripUp);
     el.addEventListener('trackpaddown', this.onTrackpadDown);
     el.addEventListener('trackpadup', this.onTrackpadUp);
+    el.addEventListener('trackpadtouchstart', this.onTrackpadTouchStart);
+    el.addEventListener('trackpadtouchend', this.onTrackpadTouchEnd);
     el.addEventListener('triggerdown', this.onTriggerDown);
     el.addEventListener('triggerup', this.onTriggerUp);
     el.addEventListener('triggertouchstart', this.onTriggerTouchStart);
@@ -76,6 +80,8 @@ module.exports.Component = registerComponent('hand-controls', {
     el.removeEventListener('gripup', this.onGripUp);
     el.removeEventListener('trackpaddown', this.onTrackpadDown);
     el.removeEventListener('trackpadup', this.onTrackpadUp);
+    el.removeEventListener('trackpadtouchstart', this.onTrackpadTouchStart);
+    el.removeEventListener('trackpadtouchend', this.onTrackpadTouchEnd);
     el.removeEventListener('triggerdown', this.onTriggerDown);
     el.removeEventListener('triggerup', this.onTriggerUp);
     el.removeEventListener('triggertouchstart', this.onTriggerTouchStart);
@@ -129,8 +135,13 @@ module.exports.Component = registerComponent('hand-controls', {
     var shouldAnimate = true;
     switch (button) {
       case 'trackpad':
-        if (isPressed === this.trackpadPressed) { return; }
-        this.trackpadPressed = isPressed;
+        if (evt.indexOf('touch') === 0) {
+          if (isTouched === this.trackpadTouched) { return; }
+          this.trackpadTouched = isTouched;
+        } else {
+          if (isPressed === this.trackpadPressed) { return; }
+          this.trackpadPressed = isPressed;
+        }
         break;
       case 'trigger':
         if (evt.indexOf('touch') === 0) {

@@ -10,6 +10,8 @@ const TOUCH_CONTROLLER_MODEL_OBJ_MTL_R = 'https://cdn.rawgit.com/tbalouet/touch-
 
 const GAMEPAD_ID_PREFIX = 'Oculus Touch';
 
+const FAKE_TOUCH_THRESHOLD = 0.00001;
+
 /**
  * Oculus Touch Controls Component
  * Interfaces with Oculus Touch controllers and maps Gamepad events to
@@ -17,8 +19,6 @@ const GAMEPAD_ID_PREFIX = 'Oculus Touch';
  * It loads a controller model and highlights the pressed buttons
  */
 module.exports.Component = registerComponent('oculus-touch-controls', {
-  dependencies: ['tracked-controls'],
-
   schema: {
     hand: {default: 'left'},
     buttonColor: { default: '#FAFAFA' },  // Off-white.
@@ -182,6 +182,25 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     var button = this.mapping[this.data.hand]['button' + evt.detail.id];
     var buttonMeshes = this.buttonMeshes;
     var value;
+    // at the moment, if trigger or grip,
+    // touch events aren't happening (touched is stuck true);
+    // synthesize touch events from very low values
+    if (button === 'trigger' || button === 'grip') {
+      var lastValue = this['last-' + button + '-value'];
+      var lastFakeTouch = false;
+      if (lastValue) { lastFakeTouch = (lastValue >= FAKE_TOUCH_THRESHOLD); }
+      var thisValue = evt.detail.state.value;
+      var thisFakeTouch = false;
+      if (thisValue) { thisFakeTouch = (thisValue >= FAKE_TOUCH_THRESHOLD); }
+      this['last-' + button + '-value'] = thisValue;
+      if (thisFakeTouch !== lastFakeTouch) {
+        if (thisFakeTouch) {
+          this.onButtonTouchStart(evt);
+        } else {
+          this.onButtonTouchEnd(evt);
+        }
+      }
+    }
     if (typeof button === 'undefined' || typeof buttonMeshes === 'undefined') { return; }
     if (button !== 'trigger' || !buttonMeshes || !buttonMeshes.trigger) { return; }
     value = evt.detail.state.value;

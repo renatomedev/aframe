@@ -142,8 +142,13 @@ module.exports.Component = registerComponent('hand-controls', {
         }
         break;
       case 'grip':
-        if (isPressed === this.gripPressed) { return; }
-        this.gripPressed = isPressed;
+        if (evt.indexOf('touch') === 0) {
+          if (isTouched === this.gripTouched) { return; }
+          this.gripTouched = isTouched;
+        } else {
+          if (isPressed === this.gripPressed) { return; }
+          this.gripPressed = isPressed;
+        }
         break;
       case 'thumbstick':
         if (isPressed === this.thumbstickPressed) { return; }
@@ -171,7 +176,7 @@ module.exports.Component = registerComponent('hand-controls', {
       if (this.surfacePressed || this.surfaceTouched ||
           this.menuTouched || this.AorXTouched ||
           this.trackpadPressed || this.trackpadTouched) {
-        if (!this.triggerPressed) { // trigger touch is currently broken, stuck true
+        if (!this.triggerPressed && !this.triggerTouched) {
           // point
           this.playAnimation('pointing', false);
         } else {
@@ -179,7 +184,7 @@ module.exports.Component = registerComponent('hand-controls', {
           this.playAnimation('press', false);
         }
       } else {
-        if (!this.triggerPressed) { // trigger touch is currently broken, stuck true
+        if (!this.triggerPressed && !this.triggerTouched) {
           // pistol pose
           this.playAnimation('pistol', false);
         } else {
@@ -189,7 +194,7 @@ module.exports.Component = registerComponent('hand-controls', {
       }
     } else {
       // grip not pressed
-      if (!this.triggerPressed) { // trigger touch is currently broken, stuck true
+      if (!this.triggerPressed && !this.triggerTouched) {
         // TODO: seems as though we should have some additional poses here
         this.playAnimation('touch', true);
       } else {

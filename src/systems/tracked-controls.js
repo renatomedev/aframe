@@ -18,15 +18,19 @@ module.exports.System = registerSystem('tracked-controls', {
     });
   },
 
+  rebuildControllerList: function () {
+    var controllers = this.controllers = [];
+    trackedControlsUtils.enumerateGamepads(function (gamepad) {
+      if (gamepad && gamepad.pose) { controllers.push(gamepad); }
+    });
+  },
+
   tick: function () {
     var now = Date.now();
     if (now >= this.lastControllerCheck + 10) {
       this.lastControllerCheck = now;
-      var controllers = this.controllers = [];
-      trackedControlsUtils.enumerateGamepads(function (gamepad) {
-        if (gamepad && gamepad.pose) { controllers.push(gamepad); }
-      });
-      this.sceneEl.emit('tracked-controls.tick', { timestamp: now, controllers: controllers });
+      this.rebuildControllerList();
+      this.sceneEl.emit('tracked-controls.tick', { timestamp: now, controllers: this.controllers });
     }
   }
 });

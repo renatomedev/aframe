@@ -57611,6 +57611,8 @@ module.exports.Component = registerComponent('hand-controls', {
     this.onGripUp = function () { self.handleButton('grip', 'up'); };
     this.onTrackpadDown = function () { self.handleButton('trackpad', 'down'); };
     this.onTrackpadUp = function () { self.handleButton('trackpad', 'up'); };
+    this.onTrackpadTouchStart = function () { self.handleButton('trackpad', 'touchstart'); };
+    this.onTrackpadTouchEnd = function () { self.handleButton('trackpad', 'touchend'); };
     this.onTriggerDown = function () { self.handleButton('trigger', 'down'); };
     this.onTriggerUp = function () { self.handleButton('trigger', 'up'); };
     this.onTriggerTouchStart = function () { self.handleButton('trigger', 'touchstart'); };
@@ -57641,6 +57643,8 @@ module.exports.Component = registerComponent('hand-controls', {
     el.addEventListener('gripup', this.onGripUp);
     el.addEventListener('trackpaddown', this.onTrackpadDown);
     el.addEventListener('trackpadup', this.onTrackpadUp);
+    el.addEventListener('trackpadtouchstart', this.onTrackpadTouchStart);
+    el.addEventListener('trackpadtouchend', this.onTrackpadTouchEnd);
     el.addEventListener('triggerdown', this.onTriggerDown);
     el.addEventListener('triggerup', this.onTriggerUp);
     el.addEventListener('triggertouchstart', this.onTriggerTouchStart);
@@ -57663,6 +57667,8 @@ module.exports.Component = registerComponent('hand-controls', {
     el.removeEventListener('gripup', this.onGripUp);
     el.removeEventListener('trackpaddown', this.onTrackpadDown);
     el.removeEventListener('trackpadup', this.onTrackpadUp);
+    el.removeEventListener('trackpadtouchstart', this.onTrackpadTouchStart);
+    el.removeEventListener('trackpadtouchend', this.onTrackpadTouchEnd);
     el.removeEventListener('triggerdown', this.onTriggerDown);
     el.removeEventListener('triggerup', this.onTriggerUp);
     el.removeEventListener('triggertouchstart', this.onTriggerTouchStart);
@@ -57716,8 +57722,13 @@ module.exports.Component = registerComponent('hand-controls', {
     var shouldAnimate = true;
     switch (button) {
       case 'trackpad':
-        if (isPressed === this.trackpadPressed) { return; }
-        this.trackpadPressed = isPressed;
+        if (evt.indexOf('touch') === 0) {
+          if (isTouched === this.trackpadTouched) { return; }
+          this.trackpadTouched = isTouched;
+        } else {
+          if (isPressed === this.trackpadPressed) { return; }
+          this.trackpadPressed = isPressed;
+        }
         break;
       case 'trigger':
         if (evt.indexOf('touch') === 0) {
@@ -60443,6 +60454,8 @@ module.exports.Component = registerComponent('vive-controls', {
     this.onButtonChanged = bind(this.onButtonChanged, this);
     this.onButtonDown = function (evt) { self.onButtonEvent(evt.detail.id, 'down'); };
     this.onButtonUp = function (evt) { self.onButtonEvent(evt.detail.id, 'up'); };
+    this.onButtonTouchStart = function (evt) { self.onButtonEvent(evt.detail.id, 'touchstart'); };
+    this.onButtonTouchEnd = function (evt) { self.onButtonEvent(evt.detail.id, 'touchend'); };
     this.onModelLoaded = bind(this.onModelLoaded, this);
     this.controllerPresent = false;
     this.everGotGamepadEvent = false;
@@ -60459,6 +60472,8 @@ module.exports.Component = registerComponent('vive-controls', {
     el.addEventListener('buttonchanged', this.onButtonChanged);
     el.addEventListener('buttondown', this.onButtonDown);
     el.addEventListener('buttonup', this.onButtonUp);
+    el.addEventListener('touchstart', this.onButtonTouchStart);
+    el.addEventListener('touchend', this.onButtonTouchEnd);
     el.addEventListener('model-loaded', this.onModelLoaded);
   },
 
@@ -60467,6 +60482,8 @@ module.exports.Component = registerComponent('vive-controls', {
     el.removeEventListener('buttonchanged', this.onButtonChanged);
     el.removeEventListener('buttondown', this.onButtonDown);
     el.removeEventListener('buttonup', this.onButtonUp);
+    el.removeEventListener('touchstart', this.onButtonTouchStart);
+    el.removeEventListener('touchend', this.onButtonTouchEnd);
     el.removeEventListener('model-loaded', this.onModelLoaded);
   },
 
@@ -60521,7 +60538,7 @@ module.exports.Component = registerComponent('vive-controls', {
     // handId: 0 - right, 1 - left, 2 - anything else...
     var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
     // if we have an OpenVR Gamepad, use the fixed mapping
-    el.setAttribute('tracked-controls', {id: data.idPrefix, controller: controller, rotationOffset: data.rotationOffset});
+    el.setAttribute('tracked-controls', {id: GAMEPAD_ID_PREFIX, controller: controller, rotationOffset: data.rotationOffset});
 
     if (!data.model) { return; }
     el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});

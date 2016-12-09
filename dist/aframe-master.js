@@ -65860,6 +65860,7 @@ module.exports.Shader = registerShader('flat', {
     color: {type: 'color'},
     fog: {default: true},
     height: {default: 256},
+    offset: {type: 'vec2', default: {x: 1, y: 1}},
     repeat: {type: 'vec2', default: {x: 1, y: 1}},
     src: {type: 'map'},
     width: {default: 512},
@@ -65951,6 +65952,7 @@ module.exports.Shader = registerShader('standard', {
     normalTextureOffset: {type: 'vec2'},
     normalTextureRepeat: {type: 'vec2', default: {x: 1, y: 1}},
 
+    offset: {type: 'vec2', default: {x: 1, y: 1}},
     repeat: {type: 'vec2', default: {x: 1, y: 1}},
     roughness: {default: 0.5, min: 0.0, max: 1.0},
     sphericalEnvMap: {type: 'map'},
@@ -66713,7 +66715,7 @@ function setTextureProperties (texture, data) {
   texture.repeat.set(repeat.x, repeat.y);
 
   // Don't bother setting offset if it is 0/0.
-  if (offset.x === 0 || offset.y === 0) { return; }
+  if (offset.x === 0 && offset.y === 0) { return; }
   texture.offset.set(offset.x, offset.y);
 }
 
@@ -67347,7 +67349,7 @@ module.exports.updateMap = function (shader, data) {
     if (src === shader.textureSrc) { return; }
     // Texture added or changed.
     shader.textureSrc = src;
-    el.sceneEl.systems.material.loadTexture(src, {src: src, repeat: data.repeat}, setMap);
+    el.sceneEl.systems.material.loadTexture(src, {src: src, repeat: data.repeat, offset: data.offset}, setMap);
     return;
   }
 

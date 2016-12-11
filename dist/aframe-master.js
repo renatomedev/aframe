@@ -63921,7 +63921,8 @@ module.exports = registerElement('a-scene', {
         'inspector': '',
         'keyboard-shortcuts': '',
         'screenshot': '',
-        'vr-mode-ui': ''
+        'vr-mode-ui': '',
+        'auto-enter-vr': ''
       }
     },
 

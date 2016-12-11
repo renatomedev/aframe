@@ -104,12 +104,8 @@ module.exports.Component = registerComponent('hand-controls', {
     var hand = this.data;
     var modelUrl;
     if (hand === 'left') {
-      // modelUrl = 'url(' + LEFT_HAND_MODEL_URL + ')';
       modelUrl = 'url(' + OCULUS_LEFT_HAND_MODEL_URL + ')';
     } else {
-      // NOTE: in theory some controllers may not only 'left' or 'right'
-      // ... but as we only have two models, here we will use right hand
-      // modelUrl = 'url(' + RIGHT_HAND_MODEL_URL + ')';
       modelUrl = 'url(' + OCULUS_RIGHT_HAND_MODEL_URL + ')';
     }
 

@@ -2,7 +2,8 @@ var registerComponent = require('../core/component').registerComponent;
 var bind = require('../utils/bind');
 var isControllerPresent = require('../utils/tracked-controls').isControllerPresent;
 
-var TOUCH_CONTROLLER_MODEL_BASE_URL = 'https://cdn.aframe.io/controllers/oculus/';
+// var TOUCH_CONTROLLER_MODEL_BASE_URL = 'https://cdn.aframe.io/controllers/oculus/';
+var TOUCH_CONTROLLER_MODEL_BASE_URL = 'https://rawgit.com/chenzlabs/assets/gh-pages/controllers/oculus/';
 var TOUCH_CONTROLLER_MODEL_OBJ_URL_L = TOUCH_CONTROLLER_MODEL_BASE_URL + 'oculus_cv1_controller_left.obj';
 var TOUCH_CONTROLLER_MODEL_OBJ_MTL_L = TOUCH_CONTROLLER_MODEL_BASE_URL + 'oculus_cv1_controller_left.mtl';
 var TOUCH_CONTROLLER_MODEL_OBJ_URL_R = TOUCH_CONTROLLER_MODEL_BASE_URL + 'oculus_cv1_controller_right.obj';

@@ -20,9 +20,11 @@ module.exports.System = registerSystem('tracked-controls', {
 
   rebuildControllerList: function () {
     var controllers = this.controllers = [];
-    trackedControlsUtils.enumerateGamepads(function (gamepad) {
+    var gamepads = trackedControlsUtils.getGamepadsByPrefix('');
+    for (var i = 0; i < gamepads.length; i++) {
+      var gamepad = gamepads[i];
       if (gamepad && gamepad.pose) { controllers.push(gamepad); }
-    });
+    }
   },
 
   tick: function () {

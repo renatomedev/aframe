@@ -2,7 +2,6 @@ var registerComponent = require('../core/component').registerComponent;
 var bind = require('../utils/bind');
 var trackedControlsUtils = require('../utils/tracked-controls');
 
-// FIXME: need appropriate models, not the vive ones!
 const TOUCH_CONTROLLER_MODEL_BASE_URL = 'https://cdn.aframe.io/controllers/oculus/';
 const TOUCH_CONTROLLER_MODEL_OBJ_URL_L = TOUCH_CONTROLLER_MODEL_BASE_URL + 'oculus_cv1_controller_left.obj';
 const TOUCH_CONTROLLER_MODEL_OBJ_MTL_L = TOUCH_CONTROLLER_MODEL_BASE_URL + 'oculus_cv1_controller_left.mtl';

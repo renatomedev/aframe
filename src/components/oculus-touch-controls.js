@@ -3,10 +3,11 @@ var bind = require('../utils/bind');
 var trackedControlsUtils = require('../utils/tracked-controls');
 
 // FIXME: need appropriate models, not the vive ones!
-const TOUCH_CONTROLLER_MODEL_OBJ_URL_L = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_left.obj';
-const TOUCH_CONTROLLER_MODEL_OBJ_MTL_L = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_left.mtl';
-const TOUCH_CONTROLLER_MODEL_OBJ_URL_R = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_right.obj';
-const TOUCH_CONTROLLER_MODEL_OBJ_MTL_R = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_right.mtl';
+const TOUCH_CONTROLLER_MODEL_BASE_URL = 'https://cdn.aframe.io/controllers/oculus/';
+const TOUCH_CONTROLLER_MODEL_OBJ_URL_L = TOUCH_CONTROLLER_MODEL_BASE_URL + 'oculus_cv1_controller_left.obj';
+const TOUCH_CONTROLLER_MODEL_OBJ_MTL_L = TOUCH_CONTROLLER_MODEL_BASE_URL + 'oculus_cv1_controller_left.mtl';
+const TOUCH_CONTROLLER_MODEL_OBJ_URL_R = TOUCH_CONTROLLER_MODEL_BASE_URL + 'oculus_cv1_controller_right.obj';
+const TOUCH_CONTROLLER_MODEL_OBJ_MTL_R = TOUCH_CONTROLLER_MODEL_BASE_URL + 'oculus_cv1_controller_right.mtl';
 
 const GAMEPAD_ID_PREFIX = 'Oculus Touch';
 

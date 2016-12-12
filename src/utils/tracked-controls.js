@@ -32,13 +32,13 @@ module.exports.isControllerPresent = function (idPrefix, queryObject) {
   var gamepad;
   var isPrefixMatch;
   var sceneEl = document.querySelector('a-scene');
-  var gamepads = null;
-  if (sceneEl && sceneEl.systems['tracked-controls']) {
+  var gamepads;
+  if (!sceneEl || !sceneEl.systems['tracked-controls']) { return isPresent; }
+
+  gamepads = sceneEl.systems['tracked-controls'].controllers;
+  if (!gamepads || gamepads.length === 0) {
+    sceneEl.systems['tracked-controls'].updateControllerList();
     gamepads = sceneEl.systems['tracked-controls'].controllers;
-    if (!gamepads || gamepads.length === 0) {
-      sceneEl.systems['tracked-controls'].rebuildControllerList();
-      gamepads = sceneEl.systems['tracked-controls'].controllers;
-    }
   }
   if (!gamepads) { return isPresent; }
 
@@ -47,10 +47,10 @@ module.exports.isControllerPresent = function (idPrefix, queryObject) {
     isPrefixMatch = (!idPrefix || idPrefix === '' || gamepad.id.indexOf(idPrefix) === 0);
     isPresent = isPrefixMatch;
     if (isPresent && queryObject.hand) {
-      isPresent = (gamepad.hand === queryObject.hand);
+      isPresent = gamepad.hand === queryObject.hand;
     }
     if (isPresent && queryObject.index) {
-      isPresent = (index === queryObject.index); // need to use count of gamepads with idPrefix
+      isPresent = index === queryObject.index; // need to use count of gamepads with idPrefix
     }
     if (isPresent) { break; }
     if (isPrefixMatch) { index++; } // update count of gamepads with idPrefix

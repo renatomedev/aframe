@@ -242,7 +242,6 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     } else {
       this.el.emit(buttonName + evtName);
     }
-    if (!this.data.model) { return; }
     if (Array.isArray(buttonName)) {
       for (i = 0; i < buttonName.length; i++) {
         this.updateButtonModel(buttonName[i], evtName);
@@ -255,6 +254,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   updateButtonModel: function (buttonName, state) {
     var color = state === 'up' ? this.data.buttonColor : this.data.buttonHighlightColor;
     var buttonMeshes = this.buttonMeshes;
+    if (!this.data.model) { return; }
     if (buttonMeshes && buttonMeshes[buttonName]) {
       buttonMeshes[buttonName].material.color.set(color);
     }

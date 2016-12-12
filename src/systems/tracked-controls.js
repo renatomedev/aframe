@@ -18,7 +18,7 @@ module.exports.System = registerSystem('tracked-controls', {
     });
   },
 
-  rebuildControllerList: function () {
+  updateControllerList: function () {
     var controllers = this.controllers = [];
     var gamepads = trackedControlsUtils.getGamepadsByPrefix('');
     for (var i = 0; i < gamepads.length; i++) {
@@ -27,11 +27,11 @@ module.exports.System = registerSystem('tracked-controls', {
     }
   },
 
-  tick: function (now) {
-    if (now < this.lastControllerCheck + 10) { return; }
+  tick: function (time) {
+    if (time < this.lastControllerCheck + 10) { return; }
 
-    this.lastControllerCheck = now;
-    this.rebuildControllerList();
-    this.sceneEl.emit('tracked-controls.tick', { timestamp: now, controllers: this.controllers });
+    this.lastControllerCheck = time;
+    this.updateControllerList();
+    this.sceneEl.emit('controllersupdated', { timestamp: time, controllers: this.controllers });
   }
 });

@@ -16,7 +16,7 @@ var GAMEPAD_ID_PREFIX = 'OpenVR Gamepad';
 module.exports.Component = registerComponent('vive-controls', {
   schema: {
     hand: {default: 'left'},
-    buttonColor: { default: '#FAFAFA' },  // Off-white.
+    buttonColor: {default: '#FAFAFA'},  // Off-white.
     buttonHighlightColor: {default: '#22D1EE'},  // Light blue.
     model: {default: true},
     rotationOffset: {default: 0} // use -999 as sentinel value to auto-determine based on hand
@@ -40,9 +40,9 @@ module.exports.Component = registerComponent('vive-controls', {
 
   bindMethods: function () {
     this.onModelLoaded = bind(this.onModelLoaded, this);
-    this.onTrackedControlsTick = bind(this.onTrackedControlsTick, this);
+    this.onControllersUpdate = bind(this.onControllersUpdate, this);
     this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
-    this.removeTrackedControlsTickListener = bind(this.removeTrackedControlsTickListener, this);
+    this.removeControllersUpdateListener = bind(this.removeControllersUpdateListener, this);
     this.onGamepadConnected = bind(this.onGamepadConnected, this);
     this.onGamepadDisconnected = bind(this.onGamepadDisconnected, this);
   },
@@ -99,13 +99,13 @@ module.exports.Component = registerComponent('vive-controls', {
 
   onGamepadConnected: function (evt) {
     this.everGotGamepadEvent = true;
-    this.removeTrackedControlsTickListener();
+    this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
     this.everGotGamepadEvent = true;
-    this.removeTrackedControlsTickListener();
+    this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
@@ -113,13 +113,13 @@ module.exports.Component = registerComponent('vive-controls', {
     this.checkIfControllerPresent();
     window.addEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
-    this.addTrackedControlsTickListener();
+    this.addControllersUpdateListener();
   },
 
   pause: function () {
     window.removeEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.removeEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
-    this.removeTrackedControlsTickListener();
+    this.removeControllersUpdateListener();
     this.removeEventListeners();
   },
 
@@ -138,15 +138,15 @@ module.exports.Component = registerComponent('vive-controls', {
     el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});
   },
 
-  addTrackedControlsTickListener: function () {
-    this.el.sceneEl.addEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  addControllersUpdateListener: function () {
+    this.el.sceneEl.addEventListener('controllersupdate', this.onControllersUpdate, false);
   },
 
-  removeTrackedControlsTickListener: function () {
-    this.el.sceneEl.removeEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  removeControllersUpdateListener: function () {
+    this.el.sceneEl.removeEventListener('controllersupdate', this.onControllersUpdate, false);
   },
 
-  onTrackedControlsTick: function () {
+  onControllersUpdate: function () {
     if (!this.everGotGamepadEvent) {
       this.checkIfControllerPresent();
     }

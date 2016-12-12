@@ -27,12 +27,11 @@ module.exports.System = registerSystem('tracked-controls', {
     }
   },
 
-  tick: function () {
-    var now = Date.now();
-    if (now >= this.lastControllerCheck + 10) {
-      this.lastControllerCheck = now;
-      this.rebuildControllerList();
-      this.sceneEl.emit('tracked-controls.tick', { timestamp: now, controllers: this.controllers });
-    }
+  tick: function (now) {
+    if (now < this.lastControllerCheck + 10) { return; }
+
+    this.lastControllerCheck = now;
+    this.rebuildControllerList();
+    this.sceneEl.emit('tracked-controls.tick', { timestamp: now, controllers: this.controllers });
   }
 });

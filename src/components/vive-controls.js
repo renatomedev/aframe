@@ -1,11 +1,11 @@
 var registerComponent = require('../core/component').registerComponent;
 var bind = require('../utils/bind');
-var trackedControlsUtils = require('../utils/tracked-controls');
+var isControllerPresent = require('../utils/tracked-controls').isControllerPresent;
 
-const VIVE_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
-const VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
+var VIVE_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
+var VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
 
-const GAMEPAD_ID_PREFIX = 'OpenVR Gamepad';
+var GAMEPAD_ID_PREFIX = 'OpenVR Gamepad';
 
 /**
  * Vive Controls Component
@@ -38,6 +38,15 @@ module.exports.Component = registerComponent('vive-controls', {
     button4: 'system'
   },
 
+  bindMethods: function () {
+    this.onModelLoaded = bind(this.onModelLoaded, this);
+    this.onTrackedControlsTick = bind(this.onTrackedControlsTick, this);
+    this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
+    this.removeTrackedControlsTickListener = bind(this.removeTrackedControlsTickListener, this);
+    this.onGamepadConnected = bind(this.onGamepadConnected, this);
+    this.onGamepadDisconnected = bind(this.onGamepadDisconnected, this);
+  },
+
   init: function () {
     var self = this;
     this.animationActive = 'pointing';
@@ -46,15 +55,10 @@ module.exports.Component = registerComponent('vive-controls', {
     this.onButtonUp = function (evt) { self.onButtonEvent(evt.detail.id, 'up'); };
     this.onButtonTouchStart = function (evt) { self.onButtonEvent(evt.detail.id, 'touchstart'); };
     this.onButtonTouchEnd = function (evt) { self.onButtonEvent(evt.detail.id, 'touchend'); };
-    this.onModelLoaded = bind(this.onModelLoaded, this);
     this.controllerPresent = false;
     this.everGotGamepadEvent = false;
     this.lastControllerCheck = 0;
-    this.onTrackedControlsTick = bind(this.onTrackedControlsTick, this);
-    this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
-    this.removeTrackedControlsTickListener = bind(this.removeTrackedControlsTickListener, this);
-    this.onGamepadConnected = bind(this.onGamepadConnected, this);
-    this.onGamepadDisconnected = bind(this.onGamepadDisconnected, this);
+    this.bindMethods();
   },
 
   addEventListeners: function () {
@@ -80,16 +84,16 @@ module.exports.Component = registerComponent('vive-controls', {
   checkIfControllerPresent: function () {
     var data = this.data;
     var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
-    var isPresent = trackedControlsUtils.isControllerPresent(GAMEPAD_ID_PREFIX, { index: controller });
+    var isPresent = isControllerPresent(GAMEPAD_ID_PREFIX, { index: controller });
 
-    if (isPresent !== this.controllerPresent) {
-      this.controllerPresent = isPresent;
-      if (isPresent) {
-        this.injectTrackedControls(); // inject track-controls
-        this.addEventListeners();
-      } else {
-        this.removeEventListeners();
-      }
+    if (isPresent === this.controllerPresent) { return; }
+
+    this.controllerPresent = isPresent;
+    if (isPresent) {
+      this.injectTrackedControls(); // inject track-controls
+      this.addEventListeners();
+    } else {
+      this.removeEventListeners();
     }
   },
 
@@ -188,14 +192,14 @@ module.exports.Component = registerComponent('vive-controls', {
     if (!this.data.model) { return; }
     if (Array.isArray(buttonName)) {
       for (i = 0; i < buttonName.length; i++) {
-        this.updateModel(buttonName[i], evtName);
+        this.updateButtonModel(buttonName[i], evtName);
       }
     } else {
-      this.updateModel(buttonName, evtName);
+      this.updateButtonModel(buttonName, evtName);
     }
   },
 
-  updateModel: function (buttonName, state) {
+  updateButtonModel: function (buttonName, state) {
     var color = state === 'up' ? this.data.buttonColor : this.data.buttonHighlightColor;
     var buttonMeshes = this.buttonMeshes;
     if (!buttonMeshes) { return; }

@@ -40,8 +40,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       button0: 'thumbstick',
       button1: 'trigger',
       button2: 'grip',
-      button3: ['oculus-touch.A-or-X', 'oculus-touch.X'],
-      button4: ['oculus-touch.Y', 'menu'],
+      button3: ['A-or-X', 'X'],
+      button4: ['B-or-Y', 'Y', 'menu'],
       button5: 'surface'
     },
     'right': {
@@ -50,8 +50,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       button0: 'thumbstick',
       button1: 'trigger',
       button2: 'grip',
-      button3: ['oculus-touch.A-or-X', 'oculus-touch.A'],
-      button4: ['oculus-touch.B', 'menu'],
+      button3: ['A-or-X', 'A'],
+      button4: ['B-or-Y', 'B', 'menu'],
       button5: 'surface'
     }
   },
@@ -223,10 +223,10 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     buttonMeshes.grip = controllerObject3D.getObjectByName(leftHand ? 'grip tooche1 group3' : 'grip tooche group4');
     buttonMeshes.thumbstick = controllerObject3D.getObjectByName(leftHand ? 'tooche1 group3 control_surface group2 thumb_stick' : 'tooche group4 control_surface group2 thumb_stick');
     buttonMeshes.trigger = controllerObject3D.getObjectByName(leftHand ? 'tooche1 group3 trigger' : 'tooche group4 trigger');
-    buttonMeshes['oculus-touch:X'] = controllerObject3D.getObjectByName('tooche1 group3 control_surface group2 button2');
-    buttonMeshes['oculus-touch:A'] = controllerObject3D.getObjectByName('tooche group4 control_surface group2 button2');
-    buttonMeshes['oculus-touch:Y'] = controllerObject3D.getObjectByName('tooche1 group3 control_surface group2 button3');
-    buttonMeshes['oculus-touch:B'] = controllerObject3D.getObjectByName('tooche group4 control_surface group2 button3');
+    buttonMeshes['X'] = controllerObject3D.getObjectByName('tooche1 group3 control_surface group2 button2');
+    buttonMeshes['A'] = controllerObject3D.getObjectByName('tooche group4 control_surface group2 button2');
+    buttonMeshes['Y'] = controllerObject3D.getObjectByName('tooche1 group3 control_surface group2 button3');
+    buttonMeshes['B'] = controllerObject3D.getObjectByName('tooche group4 control_surface group2 button3');
     buttonMeshes.surface = controllerObject3D.getObjectByName(leftHand ? 'tooche1 group3 face control_surface group2' : 'tooche group4 face control_surface group2');
 
     // Offset pivot point

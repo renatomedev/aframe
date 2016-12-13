@@ -102,6 +102,11 @@ module.exports.Component = registerComponent('hand-controls', {
   update: function () {
     var el = this.el;
     var hand = this.data;
+    var controlConfiguration = {
+      hand: hand,
+      model: false,
+      rotationOffset: hand === 'left' ? 90 : -90
+    };
     var modelUrl;
     if (hand === 'left') {
       modelUrl = 'url(' + OCULUS_LEFT_HAND_MODEL_URL + ')';
@@ -109,11 +114,6 @@ module.exports.Component = registerComponent('hand-controls', {
       modelUrl = 'url(' + OCULUS_RIGHT_HAND_MODEL_URL + ')';
     }
 
-    var controlConfiguration = {
-      hand: hand,
-      model: false,
-      rotationOffset: hand === 'left' ? 90 : -90
-    };
     el.setAttribute('vive-controls', controlConfiguration);
     el.setAttribute('oculus-touch-controls', controlConfiguration);
 
@@ -219,16 +219,16 @@ module.exports.Component = registerComponent('hand-controls', {
   },
 
   emitAnimationEvents: function (animation, reverse) {
-    var fwdAnimation = reverse ? '' : animation;
-    var lastFwdAnimation = this.lastFwdAnimation;
+    var forwardAnimation = reverse ? '' : animation;
+    var lastForwardAnimation = this.lastForwardAnimation;
     var eventName;
-    if (lastFwdAnimation !== fwdAnimation) {
-      eventName = this.animationEventMapping[lastFwdAnimation];
-      this.lastFwdAnimation = fwdAnimation;
+    if (lastForwardAnimation !== forwardAnimation) {
+      eventName = this.animationEventMapping[lastForwardAnimation];
+      this.lastForwardAnimation = forwardAnimation;
       if (eventName) {
         this.el.emit(eventName + (eventName === 'grip' ? 'open' : 'down'));
       }
-      eventName = this.animationEventMapping[fwdAnimation];
+      eventName = this.animationEventMapping[forwardAnimation];
       if (eventName) {
         this.el.emit(eventName + (eventName === 'grip' ? 'close' : 'up'));
       }

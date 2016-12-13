@@ -11,6 +11,7 @@ module.exports.getGamepadsByPrefix = function (idPrefix) {
 
   for (var i = 0; i < gamepads.length; ++i) {
     gamepad = gamepads[i];
+    // need to check that gamepad is valid, since browsers may return array of null values
     if (gamepad) {
       if (!idPrefix || gamepad.id.indexOf(idPrefix) === 0) {
         gamepadsList.push(gamepad);

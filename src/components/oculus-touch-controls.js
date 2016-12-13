@@ -76,6 +76,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.controllerPresent = false;
     this.everGotGamepadEvent = false;
     this.lastControllerCheck = 0;
+    this.previousButtonValues = {};
     this.bindMethods();
   },
 
@@ -190,13 +191,13 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     // touch events aren't happening (touched is stuck true);
     // synthesize touch events from very low values
     if (button === 'trigger' || button === 'grip') {
-      var lastValue = this['last-' + button + '-value'];
+      var lastValue = this.previousButtonValues[button];
       var lastFakeTouch = false;
       if (lastValue) { lastFakeTouch = (lastValue >= FAKE_TOUCH_THRESHOLD); }
       var thisValue = evt.detail.state.value;
       var thisFakeTouch = false;
       if (thisValue) { thisFakeTouch = (thisValue >= FAKE_TOUCH_THRESHOLD); }
-      this['last-' + button + '-value'] = thisValue;
+      this.previousButtonValues[button] = thisValue;
       if (thisFakeTouch !== lastFakeTouch) {
         if (thisFakeTouch) {
           this.onButtonTouchStart(evt);

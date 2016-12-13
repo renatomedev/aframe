@@ -66,8 +66,8 @@ module.exports.Component = registerComponent('hand-controls', {
     el.addEventListener('griptouchend', this.onGripTouchEnd);
     el.addEventListener('thumbstickdown', this.onThumbstickDown);
     el.addEventListener('thumbstickup', this.onThumbstickUp);
-    el.addEventListener('oculus-touch.A-or-Xtouchstart', this.onAorXTouchStart);
-    el.addEventListener('oculus-touch.A-or-Xtouchend', this.onAorXTouchEnd);
+    el.addEventListener('A-or-Xtouchstart', this.onAorXTouchStart);
+    el.addEventListener('A-or-Xtouchend', this.onAorXTouchEnd);
     el.addEventListener('menutouchstart', this.onMenuTouchStart);
     el.addEventListener('menutouchend', this.onMenuTouchEnd);
     el.addEventListener('surfacetouchstart', this.onSurfaceTouchStart);
@@ -90,8 +90,8 @@ module.exports.Component = registerComponent('hand-controls', {
     el.removeEventListener('griptouchend', this.onGripTouchEnd);
     el.removeEventListener('thumbstickdown', this.onThumbstickDown);
     el.removeEventListener('thumbstickup', this.onThumbstickUp);
-    el.removeEventListener('oculus-touch.A-or-Xtouchstart', this.onAorXTouchStart);
-    el.removeEventListener('oculus-touch.A-or-Xtouchend', this.onAorXTouchEnd);
+    el.removeEventListener('A-or-Xtouchstart', this.onAorXTouchStart);
+    el.removeEventListener('A-or-Xtouchend', this.onAorXTouchEnd);
     el.removeEventListener('menutouchend', this.onMenuTouchEnd);
     el.removeEventListener('menutouchstart', this.onMenuTouchStart);
     el.removeEventListener('menutouchend', this.onMenuTouchEnd);

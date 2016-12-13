@@ -179,36 +179,40 @@ module.exports.Component = registerComponent('hand-controls', {
   },
 
   animate: function () {
+    var animation;
+    var reverse = false;
     if (this.gripPressed) {
       if (this.surfacePressed || this.surfaceTouched ||
           this.menuTouched || this.AorXTouched ||
           this.trackpadPressed || this.trackpadTouched) {
         if (!this.triggerPressed && !this.triggerTouched) {
           // point
-          this.playAnimation('pointing', false);
+          animation = 'pointing';
         } else {
           // make a fist
-          this.playAnimation('press', false);
+          animation = 'press';
         }
       } else {
         if (!this.triggerPressed && !this.triggerTouched) {
           // pistol pose
-          this.playAnimation('pistol', false);
+          animation = 'pistol';
         } else {
           // thumbs up
-          this.playAnimation('thumb', false);
+          animation = 'thumb';
         }
       }
     } else {
       // grip not pressed
       if (!this.triggerPressed && !this.triggerTouched) {
         // TODO: seems as though we should have some additional poses here
-        this.playAnimation('touch', true);
+        animation = 'touch';
+        reverse = true;
       } else {
         // touch pose (?)
-        this.playAnimation('touch', false);
+        animation = 'touch';
       }
     }
+    this.playAnimation(animation, reverse);
   },
 
   // map to old vive-specific event names for now

@@ -135,6 +135,7 @@ module.exports.Component = registerComponent('hand-controls', {
   handleButton: function (button, evt) {
     var isPressed = evt === 'down';
     var isTouched = evt === 'touchstart';
+    var lastGesture;
     if (evt.indexOf('touch') === 0) {
       if (isTouched === this.touchedButtons[button]) { return; }
       this.touchedButtons[button] = isTouched;
@@ -142,46 +143,29 @@ module.exports.Component = registerComponent('hand-controls', {
       if (isPressed === this.pressedButtons[button]) { return; }
       this.pressedButtons[button] = isPressed;
     }
-    if (!this.determineGesture()) { return; }
-    this.animateGesture();
-    this.emitGestureEvents();
+    lastGesture = this.gesture;
+    this.gesture = this.determineGesture();
+    if (this.gesture === lastGesture) { return; }
+    this.animateGesture(this.gesture);
+    this.emitGestureEvents(this.gesture, lastGesture);
   },
 
   determineGesture: function () {
-    var lastGesture = this.gesture;
     var gesture;
-    if (this.pressedButtons['grip']) {
-      if (this.pressedButtons['surface'] || this.touchedButtons['surface'] ||
-          this.touchedButtons['AorX'] || this.touchedButtons['BorY'] ||
-          this.pressedButtons['trackpad'] || this.touchedButtons['trackpad']) {
-        if (!this.pressedButtons['trigger'] && !this.touchedButtons['trigger']) {
-          // pointing pose
-          gesture = 'pointing';
-        } else {
-          // make a fist
-          gesture = 'fist';
-        }
+    var isGripActive = this.pressedButtons['grip'];
+    var isSurfaceActive = this.pressedButtons['surface'] || this.touchedButtons['surface'];
+    var isTrackpadActive = this.pressedButtons['trackpad'] || this.touchedButtons['trackpad'];
+    var isTriggerActive = this.pressedButtons['trigger'] || this.touchedButtons['trigger'];
+    var isABXYActive = this.touchedButtons['AorX'] || this.touchedButtons['BorY'];
+    if (isGripActive) {
+      if (isSurfaceActive || isABXYActive || isTrackpadActive) {
+        gesture = isTriggerActive ? 'fist' : 'pointing';
       } else {
-        if (!this.pressedButtons['trigger'] && !this.touchedButtons['trigger']) {
-          // pistol pose
-          gesture = 'pistol';
-        } else {
-          // thumbs up
-          gesture = 'thumb';
-        }
+        gesture = isTriggerActive ? 'thumb' : 'pistol';
       }
-    } else {
-      // grip not pressed
-      if (!this.pressedButtons['trigger'] && !this.touchedButtons['trigger']) {
-        // TODO: seems as though we should have some additional poses here
-        // leave gesture as null
-      } else {
-        // touch pose (?)
-        gesture = 'touch';
-      }
-    }
-    this.gesture = gesture;
-    return lastGesture !== this.gesture;
+    } else
+    if (isTriggerActive) { gesture = 'touch'; } // else no gesture
+    return gesture;
   },
 
   gestureAnimationMapping: {
@@ -192,8 +176,8 @@ module.exports.Component = registerComponent('hand-controls', {
     'thumb': 'thumb'
   },
 
-  animateGesture: function () {
-    var animation = this.gestureAnimationMapping[this.gesture || ''];
+  animateGesture: function (gesture) {
+    var animation = this.gestureAnimationMapping[gesture || ''];
     this.playAnimation(animation || 'touch', !animation);
   },
 
@@ -204,17 +188,14 @@ module.exports.Component = registerComponent('hand-controls', {
     'thumb': 'thumb'  // e.g. thumbs up pose - grip button down, trackpad / surface buttons up
   },
 
-  emitGestureEvents: function () {
-    var gesture = this.gesture || '';
-    var lastGesture = this.lastGesture;
+  emitGestureEvents: function (gesture, lastGesture) {
     var eventName;
     if (lastGesture !== gesture) {
-      eventName = this.gestureEventMapping[lastGesture];
-      this.lastGesture = gesture;
+      eventName = this.gestureEventMapping[lastGesture || ''];
       if (eventName) {
         this.el.emit(eventName + (eventName === 'grip' ? 'open' : 'down'));
       }
-      eventName = this.gestureEventMapping[gesture];
+      eventName = this.gestureEventMapping[gesture || ''];
       if (eventName) {
         this.el.emit(eventName + (eventName === 'grip' ? 'close' : 'up'));
       }

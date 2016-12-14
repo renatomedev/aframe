@@ -10,6 +10,10 @@ var TOUCH_CONTROLLER_MODEL_OBJ_MTL_R = TOUCH_CONTROLLER_MODEL_BASE_URL + 'right.
 
 var GAMEPAD_ID_PREFIX = 'Oculus Touch';
 
+var PIVOT_OFFSET = {x: 0, y: -0.015, z: 0.04};
+
+// currently, browser bugs prevent capacitive touch events from firing on trigger and grip;
+// however those have analog values, and this (below button-down values) can be used to fake them
 var FAKE_TOUCH_THRESHOLD = 0.00001;
 
 /**
@@ -178,33 +182,30 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     if (!this.everGotGamepadEvent) { this.checkIfControllerPresent(); }
   },
 
+  isFakeTouch: function (analogValue) {
+    return analogValue && (analogValue >= FAKE_TOUCH_THRESHOLD);
+  },
+
   onButtonChanged: function (evt) {
     var button = this.mapping[this.data.hand]['button' + evt.detail.id];
     var buttonMeshes = this.buttonMeshes;
-    var value;
+    var lastFakeTouch;
+    var analogValue;
+    var thisFakeTouch;
+
     // at the moment, if trigger or grip,
     // touch events aren't happening (touched is stuck true);
-    // synthesize touch events from very low values
-    if (button === 'trigger' || button === 'grip') {
-      var lastValue = this.previousButtonValues[button];
-      var lastFakeTouch = false;
-      if (lastValue) { lastFakeTouch = (lastValue >= FAKE_TOUCH_THRESHOLD); }
-      var thisValue = evt.detail.state.value;
-      var thisFakeTouch = false;
-      if (thisValue) { thisFakeTouch = (thisValue >= FAKE_TOUCH_THRESHOLD); }
-      this.previousButtonValues[button] = thisValue;
-      if (thisFakeTouch !== lastFakeTouch) {
-        if (thisFakeTouch) {
-          this.onButtonTouchStart(evt);
-        } else {
-          this.onButtonTouchEnd(evt);
-        }
-      }
+    // synthesize touch events from very low analog values
+    if (button !== 'trigger' && button !== 'grip') { return; }
+    analogValue = evt.detail.state.value;
+    lastFakeTouch = this.isFakeTouch(this.previousButtonValues[button]);
+    this.previousButtonValues[button] = analogValue;
+    thisFakeTouch = this.isFakeTouch(analogValue);
+    if (thisFakeTouch !== lastFakeTouch) {
+      (thisFakeTouch ? this.onButtonTouchStart : this.onButtonTouchEnd)(evt);
     }
-    if (typeof button === 'undefined' || typeof buttonMeshes === 'undefined') { return; }
     if (button !== 'trigger' || !buttonMeshes || !buttonMeshes.trigger) { return; }
-    value = evt.detail.state.value;
-    buttonMeshes.trigger.rotation.x = -value * (Math.PI / 12);
+    buttonMeshes.trigger.rotation.x = -analogValue * (Math.PI / 12);
   },
 
   onModelLoaded: function (evt) {
@@ -225,7 +226,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     buttonMeshes.surface = controllerObject3D.getObjectByName(leftHand ? 'tooche1 group3 face control_surface group2' : 'tooche group4 face control_surface group2');
 
     // Offset pivot point
-    controllerObject3D.position.set(0, -0.015, 0.04);
+    controllerObject3D.position = PIVOT_OFFSET;
   },
 
   onButtonEvent: function (id, evtName) {

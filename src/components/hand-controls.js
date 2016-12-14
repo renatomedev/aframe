@@ -68,10 +68,14 @@ module.exports.Component = registerComponent('hand-controls', {
     el.addEventListener('griptouchend', this.onGripTouchEnd);
     el.addEventListener('thumbstickdown', this.onThumbstickDown);
     el.addEventListener('thumbstickup', this.onThumbstickUp);
-    el.addEventListener('A-or-Xtouchstart', this.onAorXTouchStart);
-    el.addEventListener('A-or-Xtouchend', this.onAorXTouchEnd);
-    el.addEventListener('B-or-Ytouchstart', this.onBorYTouchStart);
-    el.addEventListener('B-or-Ytouchend', this.onBorYTouchEnd);
+    el.addEventListener('Atouchstart', this.onAorXTouchStart);
+    el.addEventListener('Atouchend', this.onAorXTouchEnd);
+    el.addEventListener('Btouchstart', this.onBorYTouchStart);
+    el.addEventListener('Btouchend', this.onBorYTouchEnd);
+    el.addEventListener('Xtouchstart', this.onAorXTouchStart);
+    el.addEventListener('Xtouchend', this.onAorXTouchEnd);
+    el.addEventListener('Ytouchstart', this.onBorYTouchStart);
+    el.addEventListener('Ytouchend', this.onBorYTouchEnd);
     el.addEventListener('surfacetouchstart', this.onSurfaceTouchStart);
     el.addEventListener('surfacetouchend', this.onSurfaceTouchEnd);
   },
@@ -92,10 +96,14 @@ module.exports.Component = registerComponent('hand-controls', {
     el.removeEventListener('griptouchend', this.onGripTouchEnd);
     el.removeEventListener('thumbstickdown', this.onThumbstickDown);
     el.removeEventListener('thumbstickup', this.onThumbstickUp);
-    el.removeEventListener('A-or-Xtouchstart', this.onAorXTouchStart);
-    el.removeEventListener('A-or-Xtouchend', this.onAorXTouchEnd);
-    el.removeEventListener('B-or-Ytouchstart', this.onBorYTouchStart);
-    el.removeEventListener('B-or-Ytouchend', this.onBorYTouchEnd);
+    el.removeEventListener('Atouchstart', this.onAorXTouchStart);
+    el.removeEventListener('Atouchend', this.onAorXTouchEnd);
+    el.removeEventListener('Btouchstart', this.onBorYTouchStart);
+    el.removeEventListener('Btouchend', this.onBorYTouchEnd);
+    el.removeEventListener('Xtouchstart', this.onAorXTouchStart);
+    el.removeEventListener('Xtouchend', this.onAorXTouchEnd);
+    el.removeEventListener('Ytouchstart', this.onBorYTouchStart);
+    el.removeEventListener('Ytouchend', this.onBorYTouchEnd);
     el.removeEventListener('surfacetouchstart', this.onSurfaceTouchStart);
     el.removeEventListener('surfacetouchend', this.onSurfaceTouchEnd);
   },

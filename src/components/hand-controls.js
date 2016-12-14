@@ -38,8 +38,8 @@ module.exports.Component = registerComponent('hand-controls', {
     this.onThumbstickUp = function () { self.handleButton('thumbstick', 'up'); };
     this.onAorXTouchStart = function () { self.handleButton('AorX', 'touchstart'); };
     this.onAorXTouchEnd = function () { self.handleButton('AorX', 'touchend'); };
-    this.onMenuTouchStart = function () { self.handleButton('menu', 'touchstart'); };
-    this.onMenuTouchEnd = function () { self.handleButton('menu', 'touchend'); };
+    this.onBorYTouchStart = function () { self.handleButton('BorY', 'touchstart'); };
+    this.onBorYTouchEnd = function () { self.handleButton('BorY', 'touchend'); };
     this.onSurfaceTouchStart = function () { self.handleButton('surface', 'touchstart'); };
     this.onSurfaceTouchEnd = function () { self.handleButton('surface', 'touchend'); };
   },
@@ -70,8 +70,8 @@ module.exports.Component = registerComponent('hand-controls', {
     el.addEventListener('thumbstickup', this.onThumbstickUp);
     el.addEventListener('A-or-Xtouchstart', this.onAorXTouchStart);
     el.addEventListener('A-or-Xtouchend', this.onAorXTouchEnd);
-    el.addEventListener('menutouchstart', this.onMenuTouchStart);
-    el.addEventListener('menutouchend', this.onMenuTouchEnd);
+    el.addEventListener('B-or-Ytouchstart', this.onBorYTouchStart);
+    el.addEventListener('B-or-Ytouchend', this.onBorYTouchEnd);
     el.addEventListener('surfacetouchstart', this.onSurfaceTouchStart);
     el.addEventListener('surfacetouchend', this.onSurfaceTouchEnd);
   },
@@ -94,9 +94,8 @@ module.exports.Component = registerComponent('hand-controls', {
     el.removeEventListener('thumbstickup', this.onThumbstickUp);
     el.removeEventListener('A-or-Xtouchstart', this.onAorXTouchStart);
     el.removeEventListener('A-or-Xtouchend', this.onAorXTouchEnd);
-    el.removeEventListener('menutouchend', this.onMenuTouchEnd);
-    el.removeEventListener('menutouchstart', this.onMenuTouchStart);
-    el.removeEventListener('menutouchend', this.onMenuTouchEnd);
+    el.removeEventListener('B-or-Ytouchstart', this.onBorYTouchStart);
+    el.removeEventListener('B-or-Ytouchend', this.onBorYTouchEnd);
     el.removeEventListener('surfacetouchstart', this.onSurfaceTouchStart);
     el.removeEventListener('surfacetouchend', this.onSurfaceTouchEnd);
   },
@@ -145,7 +144,7 @@ module.exports.Component = registerComponent('hand-controls', {
     var gesture;
     if (this.pressedButtons['grip']) {
       if (this.pressedButtons['surface'] || this.touchedButtons['surface'] ||
-          this.touchedButtons['menu'] || this.touchedButtons['AorX'] ||
+          this.touchedButtons['AorX'] || this.touchedButtons['BorY'] ||
           this.pressedButtons['trackpad'] || this.touchedButtons['trackpad']) {
         if (!this.pressedButtons['trigger'] && !this.touchedButtons['trigger']) {
           // pointing pose

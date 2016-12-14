@@ -29,7 +29,6 @@ module.exports.System = registerSystem('tracked-controls', {
 
   tick: function (time) {
     if (time < this.lastControllerCheck + 10) { return; }
-
     this.lastControllerCheck = time;
     this.updateControllerList();
     this.sceneEl.emit('controllersupdated', { timestamp: time, controllers: this.controllers });

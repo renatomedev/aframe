@@ -103,9 +103,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   checkIfControllerPresent: function () {
     var data = this.data;
     var isPresent = isControllerPresent(GAMEPAD_ID_PREFIX, { hand: data.hand });
-
     if (isPresent === this.controllerPresent) { return; }
-
     this.controllerPresent = isPresent;
     if (isPresent) {
       this.injectTrackedControls(); // inject track-controls
@@ -178,9 +176,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
 
   onControllersUpdate: function () {
-    if (!this.everGotGamepadEvent) {
-      this.checkIfControllerPresent();
-    }
+    if (!this.everGotGamepadEvent) { this.checkIfControllerPresent(); }
   },
 
   onButtonChanged: function (evt) {

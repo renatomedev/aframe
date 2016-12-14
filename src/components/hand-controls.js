@@ -20,6 +20,8 @@ module.exports.Component = registerComponent('hand-controls', {
 
   init: function () {
     var self = this;
+    this.touchedButtons = {};
+    this.pressedButtons = {};
     this.onGripDown = function () { self.handleButton('grip', 'down'); };
     this.onGripUp = function () { self.handleButton('grip', 'up'); };
     this.onTrackpadDown = function () { self.handleButton('trackpad', 'down'); };
@@ -113,10 +115,8 @@ module.exports.Component = registerComponent('hand-controls', {
     } else {
       modelUrl = 'url(' + OCULUS_RIGHT_HAND_MODEL_URL + ')';
     }
-
     el.setAttribute('vive-controls', controlConfiguration);
     el.setAttribute('oculus-touch-controls', controlConfiguration);
-
     el.setAttribute('blend-character-model', modelUrl);
   },
 
@@ -128,111 +128,86 @@ module.exports.Component = registerComponent('hand-controls', {
   handleButton: function (button, evt) {
     var isPressed = evt === 'down';
     var isTouched = evt === 'touchstart';
-    var shouldAnimate = true;
-    switch (button) {
-      case 'trackpad':
-        if (evt.indexOf('touch') === 0) {
-          if (isTouched === this.trackpadTouched) { return; }
-          this.trackpadTouched = isTouched;
-        } else {
-          if (isPressed === this.trackpadPressed) { return; }
-          this.trackpadPressed = isPressed;
-        }
-        break;
-      case 'trigger':
-        if (evt.indexOf('touch') === 0) {
-          if (isTouched === this.triggerTouched) { return; }
-          this.triggerTouched = isTouched;
-        } else {
-          if (isPressed === this.triggerPressed) { return; }
-          this.triggerPressed = isPressed;
-        }
-        break;
-      case 'grip':
-        if (evt.indexOf('touch') === 0) {
-          if (isTouched === this.gripTouched) { return; }
-          this.gripTouched = isTouched;
-        } else {
-          if (isPressed === this.gripPressed) { return; }
-          this.gripPressed = isPressed;
-        }
-        break;
-      case 'thumbstick':
-        if (isPressed === this.thumbstickPressed) { return; }
-        this.thumbstickPressed = isPressed;
-        shouldAnimate = false;
-        break;
-      case 'AorX':
-        if (isTouched === this.AorXTouched) { return; }
-        this.AorXTouched = isTouched;
-        break;
-      case 'menu':
-        if (isTouched === this.menuTouched) { return; }
-        this.menuTouched = isTouched;
-        break;
-      case 'surface':
-        if (isTouched === this.surfaceTouched) { return; }
-        this.surfaceTouched = isTouched;
-        break;
+    if (evt.indexOf('touch') === 0) {
+      if (isTouched === this.touchedButtons[button]) { return; }
+      this.touchedButtons[button] = isTouched;
+    } else {
+      if (isPressed === this.pressedButtons[button]) { return; }
+      this.pressedButtons[button] = isPressed;
     }
-    if (shouldAnimate) { this.animate(); }
+    if (!this.determineGesture()) { return; }
+    this.animateGesture();
+    this.emitGestureEvents();
   },
 
-  animate: function () {
-    var animation;
-    var reverse = false;
-    if (this.gripPressed) {
-      if (this.surfacePressed || this.surfaceTouched ||
-          this.menuTouched || this.AorXTouched ||
-          this.trackpadPressed || this.trackpadTouched) {
-        if (!this.triggerPressed && !this.triggerTouched) {
-          // point
-          animation = 'pointing';
+  determineGesture: function () {
+    var lastGesture = this.gesture;
+    var gesture;
+    if (this.pressedButtons['grip']) {
+      if (this.pressedButtons['surface'] || this.touchedButtons['surface'] ||
+          this.touchedButtons['menu'] || this.touchedButtons['AorX'] ||
+          this.pressedButtons['trackpad'] || this.touchedButtons['trackpad']) {
+        if (!this.pressedButtons['trigger'] && !this.touchedButtons['trigger']) {
+          // pointing pose
+          gesture = 'pointing';
         } else {
           // make a fist
-          animation = 'press';
+          gesture = 'fist';
         }
       } else {
-        if (!this.triggerPressed && !this.triggerTouched) {
+        if (!this.pressedButtons['trigger'] && !this.touchedButtons['trigger']) {
           // pistol pose
-          animation = 'pistol';
+          gesture = 'pistol';
         } else {
           // thumbs up
-          animation = 'thumb';
+          gesture = 'thumb';
         }
       }
     } else {
       // grip not pressed
-      if (!this.triggerPressed && !this.triggerTouched) {
+      if (!this.pressedButtons['trigger'] && !this.touchedButtons['trigger']) {
         // TODO: seems as though we should have some additional poses here
-        animation = 'touch';
-        reverse = true;
+        // leave gesture as null
       } else {
         // touch pose (?)
-        animation = 'touch';
+        gesture = 'touch';
       }
     }
-    this.playAnimation(animation, reverse);
+    this.gesture = gesture;
+    return lastGesture !== this.gesture;
+  },
+
+  gestureAnimationMapping: {
+    'pointing': 'pointing',
+    'pistol': 'pistol',
+    'fist': 'press',
+    'touch': 'touch',
+    'thumb': 'thumb'
+  },
+
+  animateGesture: function () {
+    var animation = this.gestureAnimationMapping[this.gesture || ''];
+    this.playAnimation(animation || 'touch', !animation);
   },
 
   // map to old vive-specific event names for now
-  animationEventMapping: {
-    'press': 'grip',  // e.g. grip button down
+  gestureEventMapping: {
+    'fist': 'grip',  // e.g. grip button down
     'touch': 'point', // e.g. trigger button down
     'thumb': 'thumb'  // e.g. thumbs up pose - grip button down, trackpad / surface buttons up
   },
 
-  emitAnimationEvents: function (animation, reverse) {
-    var forwardAnimation = reverse ? '' : animation;
-    var lastForwardAnimation = this.lastForwardAnimation;
+  emitGestureEvents: function () {
+    var gesture = this.gesture || '';
+    var lastGesture = this.lastGesture;
     var eventName;
-    if (lastForwardAnimation !== forwardAnimation) {
-      eventName = this.animationEventMapping[lastForwardAnimation];
-      this.lastForwardAnimation = forwardAnimation;
+    if (lastGesture !== gesture) {
+      eventName = this.gestureEventMapping[lastGesture];
+      this.lastGesture = gesture;
       if (eventName) {
         this.el.emit(eventName + (eventName === 'grip' ? 'open' : 'down'));
       }
-      eventName = this.animationEventMapping[forwardAnimation];
+      eventName = this.gestureEventMapping[gesture];
       if (eventName) {
         this.el.emit(eventName + (eventName === 'grip' ? 'close' : 'up'));
       }
@@ -249,7 +224,6 @@ module.exports.Component = registerComponent('hand-controls', {
     var animationActive = this.animationActive;
     var timeScale = 1;
     var mesh = this.el.getObject3D('mesh');
-    this.emitAnimationEvents(animation, reverse);
     if (!mesh) { return; }
 
     // determine direction of the animation.

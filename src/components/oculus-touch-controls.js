@@ -139,7 +139,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.removeEventListeners();
   },
 
-  updateModel: function () {
+  updateControllerModel: function () {
     var objUrl, mtlUrl;
     if (!this.data.model) { return; }
     if (this.data.hand === 'right') {
@@ -163,8 +163,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       controller: 0,
       rotationOffset: data.rotationOffset !== -999 ? data.rotationOffset : isRightHand ? -90 : 90
     });
-
-    this.updateModel();
+    this.updateControllerModel();
   },
 
   addControllersUpdateListener: function () {
@@ -239,6 +238,11 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     } else {
       this.el.emit(buttonName + evtName);
     }
+    this.updateModel(buttonName, evtName);
+  },
+
+  updateModel: function (buttonName, evtName) {
+    var i;
     if (Array.isArray(buttonName)) {
       for (i = 0; i < buttonName.length; i++) {
         this.updateButtonModel(buttonName[i], evtName);

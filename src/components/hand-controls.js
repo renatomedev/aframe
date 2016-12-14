@@ -189,16 +189,13 @@ module.exports.Component = registerComponent('hand-controls', {
   },
 
   emitGestureEvents: function (gesture, lastGesture) {
+    var el = this.el;
     var eventName;
     if (lastGesture !== gesture) {
       eventName = this.gestureEventMapping[lastGesture || ''];
-      if (eventName) {
-        this.el.emit(eventName + (eventName === 'grip' ? 'open' : 'down'));
-      }
+      if (eventName) { el.emit(eventName + (eventName === 'grip' ? 'open' : 'down')); }
       eventName = this.gestureEventMapping[gesture || ''];
-      if (eventName) {
-        this.el.emit(eventName + (eventName === 'grip' ? 'close' : 'up'));
-      }
+      if (eventName) { el.emit(eventName + (eventName === 'grip' ? 'close' : 'up')); }
     }
   },
 

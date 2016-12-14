@@ -147,9 +147,7 @@ module.exports.Component = registerComponent('vive-controls', {
   },
 
   onControllersUpdate: function () {
-    if (!this.everGotGamepadEvent) {
-      this.checkIfControllerPresent();
-    }
+    if (!this.everGotGamepadEvent) { this.checkIfControllerPresent(); }
   },
 
   onButtonChanged: function (evt) {
@@ -189,6 +187,11 @@ module.exports.Component = registerComponent('vive-controls', {
     } else {
       this.el.emit(buttonName + evtName);
     }
+    this.updateModel(buttonName, evtName);
+  },
+
+  updateModel: function (buttonName, evtName) {
+    var i;
     if (!this.data.model) { return; }
     if (Array.isArray(buttonName)) {
       for (i = 0; i < buttonName.length; i++) {

@@ -57587,8 +57587,8 @@ module.exports.Component = registerComponent('geometry', {
 },{"../core/component":63,"../core/geometry":64,"../lib/three":106,"../utils/debug":120}],26:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 
-const OCULUS_LEFT_HAND_MODEL_URL = 'https://cdn.aframe.io/controllers/oculus-hands/leftHand.json';
-const OCULUS_RIGHT_HAND_MODEL_URL = 'https://cdn.aframe.io/controllers/oculus-hands/rightHand.json';
+var OCULUS_LEFT_HAND_MODEL_URL = 'https://cdn.aframe.io/controllers/oculus-hands/leftHand.json';
+var OCULUS_RIGHT_HAND_MODEL_URL = 'https://cdn.aframe.io/controllers/oculus-hands/rightHand.json';
 
 /**
 *
@@ -57607,6 +57607,8 @@ module.exports.Component = registerComponent('hand-controls', {
 
   init: function () {
     var self = this;
+    this.touchedButtons = {};
+    this.pressedButtons = {};
     this.onGripDown = function () { self.handleButton('grip', 'down'); };
     this.onGripUp = function () { self.handleButton('grip', 'up'); };
     this.onTrackpadDown = function () { self.handleButton('trackpad', 'down'); };
@@ -57623,8 +57625,8 @@ module.exports.Component = registerComponent('hand-controls', {
     this.onThumbstickUp = function () { self.handleButton('thumbstick', 'up'); };
     this.onAorXTouchStart = function () { self.handleButton('AorX', 'touchstart'); };
     this.onAorXTouchEnd = function () { self.handleButton('AorX', 'touchend'); };
-    this.onMenuTouchStart = function () { self.handleButton('menu', 'touchstart'); };
-    this.onMenuTouchEnd = function () { self.handleButton('menu', 'touchend'); };
+    this.onBorYTouchStart = function () { self.handleButton('BorY', 'touchstart'); };
+    this.onBorYTouchEnd = function () { self.handleButton('BorY', 'touchend'); };
     this.onSurfaceTouchStart = function () { self.handleButton('surface', 'touchstart'); };
     this.onSurfaceTouchEnd = function () { self.handleButton('surface', 'touchend'); };
   },
@@ -57653,10 +57655,14 @@ module.exports.Component = registerComponent('hand-controls', {
     el.addEventListener('griptouchend', this.onGripTouchEnd);
     el.addEventListener('thumbstickdown', this.onThumbstickDown);
     el.addEventListener('thumbstickup', this.onThumbstickUp);
-    el.addEventListener('oculus-touch.A-or-Xtouchstart', this.onAorXTouchStart);
-    el.addEventListener('oculus-touch.A-or-Xtouchend', this.onAorXTouchEnd);
-    el.addEventListener('menutouchstart', this.onMenuTouchStart);
-    el.addEventListener('menutouchend', this.onMenuTouchEnd);
+    el.addEventListener('Atouchstart', this.onAorXTouchStart);
+    el.addEventListener('Atouchend', this.onAorXTouchEnd);
+    el.addEventListener('Btouchstart', this.onBorYTouchStart);
+    el.addEventListener('Btouchend', this.onBorYTouchEnd);
+    el.addEventListener('Xtouchstart', this.onAorXTouchStart);
+    el.addEventListener('Xtouchend', this.onAorXTouchEnd);
+    el.addEventListener('Ytouchstart', this.onBorYTouchStart);
+    el.addEventListener('Ytouchend', this.onBorYTouchEnd);
     el.addEventListener('surfacetouchstart', this.onSurfaceTouchStart);
     el.addEventListener('surfacetouchend', this.onSurfaceTouchEnd);
   },
@@ -57677,11 +57683,14 @@ module.exports.Component = registerComponent('hand-controls', {
     el.removeEventListener('griptouchend', this.onGripTouchEnd);
     el.removeEventListener('thumbstickdown', this.onThumbstickDown);
     el.removeEventListener('thumbstickup', this.onThumbstickUp);
-    el.removeEventListener('oculus-touch.A-or-Xtouchstart', this.onAorXTouchStart);
-    el.removeEventListener('oculus-touch.A-or-Xtouchend', this.onAorXTouchEnd);
-    el.removeEventListener('menutouchend', this.onMenuTouchEnd);
-    el.removeEventListener('menutouchstart', this.onMenuTouchStart);
-    el.removeEventListener('menutouchend', this.onMenuTouchEnd);
+    el.removeEventListener('Atouchstart', this.onAorXTouchStart);
+    el.removeEventListener('Atouchend', this.onAorXTouchEnd);
+    el.removeEventListener('Btouchstart', this.onBorYTouchStart);
+    el.removeEventListener('Btouchend', this.onBorYTouchEnd);
+    el.removeEventListener('Xtouchstart', this.onAorXTouchStart);
+    el.removeEventListener('Xtouchend', this.onAorXTouchEnd);
+    el.removeEventListener('Ytouchstart', this.onBorYTouchStart);
+    el.removeEventListener('Ytouchend', this.onBorYTouchEnd);
     el.removeEventListener('surfacetouchstart', this.onSurfaceTouchStart);
     el.removeEventListener('surfacetouchend', this.onSurfaceTouchEnd);
   },
@@ -57689,25 +57698,19 @@ module.exports.Component = registerComponent('hand-controls', {
   update: function () {
     var el = this.el;
     var hand = this.data;
-    var modelUrl;
-    if (hand === 'left') {
-      // modelUrl = 'url(' + LEFT_HAND_MODEL_URL + ')';
-      modelUrl = 'url(' + OCULUS_LEFT_HAND_MODEL_URL + ')';
-    } else {
-      // NOTE: in theory some controllers may not only 'left' or 'right'
-      // ... but as we only have two models, here we will use right hand
-      // modelUrl = 'url(' + RIGHT_HAND_MODEL_URL + ')';
-      modelUrl = 'url(' + OCULUS_RIGHT_HAND_MODEL_URL + ')';
-    }
-
     var controlConfiguration = {
       hand: hand,
       model: false,
       rotationOffset: hand === 'left' ? 90 : -90
     };
+    var modelUrl;
+    if (hand === 'left') {
+      modelUrl = 'url(' + OCULUS_LEFT_HAND_MODEL_URL + ')';
+    } else {
+      modelUrl = 'url(' + OCULUS_RIGHT_HAND_MODEL_URL + ')';
+    }
     el.setAttribute('vive-controls', controlConfiguration);
     el.setAttribute('oculus-touch-controls', controlConfiguration);
-
     el.setAttribute('blend-character-model', modelUrl);
   },
 
@@ -57719,110 +57722,67 @@ module.exports.Component = registerComponent('hand-controls', {
   handleButton: function (button, evt) {
     var isPressed = evt === 'down';
     var isTouched = evt === 'touchstart';
-    var shouldAnimate = true;
-    switch (button) {
-      case 'trackpad':
-        if (evt.indexOf('touch') === 0) {
-          if (isTouched === this.trackpadTouched) { return; }
-          this.trackpadTouched = isTouched;
-        } else {
-          if (isPressed === this.trackpadPressed) { return; }
-          this.trackpadPressed = isPressed;
-        }
-        break;
-      case 'trigger':
-        if (evt.indexOf('touch') === 0) {
-          if (isTouched === this.triggerTouched) { return; }
-          this.triggerTouched = isTouched;
-        } else {
-          if (isPressed === this.triggerPressed) { return; }
-          this.triggerPressed = isPressed;
-        }
-        break;
-      case 'grip':
-        if (evt.indexOf('touch') === 0) {
-          if (isTouched === this.gripTouched) { return; }
-          this.gripTouched = isTouched;
-        } else {
-          if (isPressed === this.gripPressed) { return; }
-          this.gripPressed = isPressed;
-        }
-        break;
-      case 'thumbstick':
-        if (isPressed === this.thumbstickPressed) { return; }
-        this.thumbstickPressed = isPressed;
-        shouldAnimate = false;
-        break;
-      case 'AorX':
-        if (isTouched === this.AorXTouched) { return; }
-        this.AorXTouched = isTouched;
-        break;
-      case 'menu':
-        if (isTouched === this.menuTouched) { return; }
-        this.menuTouched = isTouched;
-        break;
-      case 'surface':
-        if (isTouched === this.surfaceTouched) { return; }
-        this.surfaceTouched = isTouched;
-        break;
+    var lastGesture;
+    if (evt.indexOf('touch') === 0) {
+      if (isTouched === this.touchedButtons[button]) { return; }
+      this.touchedButtons[button] = isTouched;
+    } else {
+      if (isPressed === this.pressedButtons[button]) { return; }
+      this.pressedButtons[button] = isPressed;
     }
-    if (shouldAnimate) { this.animate(); }
+    lastGesture = this.gesture;
+    this.gesture = this.determineGesture();
+    if (this.gesture === lastGesture) { return; }
+    this.animateGesture(this.gesture);
+    this.emitGestureEvents(this.gesture, lastGesture);
   },
 
-  animate: function () {
-    if (this.gripPressed) {
-      if (this.surfacePressed || this.surfaceTouched ||
-          this.menuTouched || this.AorXTouched ||
-          this.trackpadPressed || this.trackpadTouched) {
-        if (!this.triggerPressed && !this.triggerTouched) {
-          // point
-          this.playAnimation('pointing', false);
-        } else {
-          // make a fist
-          this.playAnimation('press', false);
-        }
+  determineGesture: function () {
+    var gesture;
+    var isGripActive = this.pressedButtons['grip'];
+    var isSurfaceActive = this.pressedButtons['surface'] || this.touchedButtons['surface'];
+    var isTrackpadActive = this.pressedButtons['trackpad'] || this.touchedButtons['trackpad'];
+    var isTriggerActive = this.pressedButtons['trigger'] || this.touchedButtons['trigger'];
+    var isABXYActive = this.touchedButtons['AorX'] || this.touchedButtons['BorY'];
+    if (isGripActive) {
+      if (isSurfaceActive || isABXYActive || isTrackpadActive) {
+        gesture = isTriggerActive ? 'fist' : 'pointing';
       } else {
-        if (!this.triggerPressed && !this.triggerTouched) {
-          // pistol pose
-          this.playAnimation('pistol', false);
-        } else {
-          // thumbs up
-          this.playAnimation('thumb', false);
-        }
+        gesture = isTriggerActive ? 'thumb' : 'pistol';
       }
-    } else {
-      // grip not pressed
-      if (!this.triggerPressed && !this.triggerTouched) {
-        // TODO: seems as though we should have some additional poses here
-        this.playAnimation('touch', true);
-      } else {
-        // touch pose (?)
-        this.playAnimation('touch', false);
-      }
-    }
+    } else
+    if (isTriggerActive) { gesture = 'touch'; } // else no gesture
+    return gesture;
+  },
+
+  gestureAnimationMapping: {
+    'pointing': 'pointing',
+    'pistol': 'pistol',
+    'fist': 'press',
+    'touch': 'touch',
+    'thumb': 'thumb'
+  },
+
+  animateGesture: function (gesture) {
+    var animation = this.gestureAnimationMapping[gesture || ''];
+    this.playAnimation(animation || 'touch', !animation);
   },
 
   // map to old vive-specific event names for now
-  animationEventMapping: {
-    'press': 'grip',  // e.g. grip button down
+  gestureEventMapping: {
+    'fist': 'grip',  // e.g. grip button down
     'touch': 'point', // e.g. trigger button down
     'thumb': 'thumb'  // e.g. thumbs up pose - grip button down, trackpad / surface buttons up
   },
 
-  emitAnimationEvents: function (animation, reverse) {
-    var fwdAnimation = reverse ? '' : animation;
-    var lastFwdAnimation = this.lastFwdAnimation;
+  emitGestureEvents: function (gesture, lastGesture) {
+    var el = this.el;
     var eventName;
-    if (lastFwdAnimation !== fwdAnimation) {
-      eventName = this.animationEventMapping[lastFwdAnimation];
-      this.lastFwdAnimation = fwdAnimation;
-      if (eventName) {
-        this.el.emit(eventName + (eventName === 'grip' ? 'open' : 'down'));
-      }
-      eventName = this.animationEventMapping[fwdAnimation];
-      if (eventName) {
-        this.el.emit(eventName + (eventName === 'grip' ? 'close' : 'up'));
-      }
+    if (lastGesture !== gesture) {
+      eventName = this.gestureEventMapping[lastGesture || ''];
+      if (eventName) { el.emit(eventName + (eventName === 'grip' ? 'open' : 'down')); }
+      eventName = this.gestureEventMapping[gesture || ''];
+      if (eventName) { el.emit(eventName + (eventName === 'grip' ? 'close' : 'up')); }
     }
   },
 
@@ -57836,7 +57796,6 @@ module.exports.Component = registerComponent('hand-controls', {
     var animationActive = this.animationActive;
     var timeScale = 1;
     var mesh = this.el.getObject3D('mesh');
-    this.emitAnimationEvents(animation, reverse);
     if (!mesh) { return; }
 
     // determine direction of the animation.
@@ -58635,17 +58594,21 @@ module.exports.Component = registerComponent('obj-model', {
 },{"../core/component":63,"../lib/three":106,"../utils/debug":120}],32:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var bind = _dereq_('../utils/bind');
-var trackedControlsUtils = _dereq_('../utils/tracked-controls');
+var isControllerPresent = _dereq_('../utils/tracked-controls').isControllerPresent;
 
-// FIXME: need appropriate models, not the vive ones!
-const TOUCH_CONTROLLER_MODEL_OBJ_URL_L = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_left.obj';
-const TOUCH_CONTROLLER_MODEL_OBJ_MTL_L = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_left.mtl';
-const TOUCH_CONTROLLER_MODEL_OBJ_URL_R = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_right.obj';
-const TOUCH_CONTROLLER_MODEL_OBJ_MTL_R = 'https://cdn.rawgit.com/tbalouet/touch-controls/03e36bcb46a5b81b6796feb8953058e4ec788b47/models/touch_right.mtl';
+var TOUCH_CONTROLLER_MODEL_BASE_URL = 'https://cdn.aframe.io/controllers/oculus/oculus-touch-controller-';
+var TOUCH_CONTROLLER_MODEL_OBJ_URL_L = TOUCH_CONTROLLER_MODEL_BASE_URL + 'left.obj';
+var TOUCH_CONTROLLER_MODEL_OBJ_MTL_L = TOUCH_CONTROLLER_MODEL_BASE_URL + 'left.mtl';
+var TOUCH_CONTROLLER_MODEL_OBJ_URL_R = TOUCH_CONTROLLER_MODEL_BASE_URL + 'right.obj';
+var TOUCH_CONTROLLER_MODEL_OBJ_MTL_R = TOUCH_CONTROLLER_MODEL_BASE_URL + 'right.mtl';
 
-const GAMEPAD_ID_PREFIX = 'Oculus Touch';
+var GAMEPAD_ID_PREFIX = 'Oculus Touch';
 
-const FAKE_TOUCH_THRESHOLD = 0.00001;
+var PIVOT_OFFSET = {x: 0, y: -0.015, z: 0.04};
+
+// currently, browser bugs prevent capacitive touch events from firing on trigger and grip;
+// however those have analog values, and this (below button-down values) can be used to fake them
+var FAKE_TOUCH_THRESHOLD = 0.00001;
 
 /**
  * Oculus Touch Controls Component
@@ -58675,8 +58638,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       button0: 'thumbstick',
       button1: 'trigger',
       button2: 'grip',
-      button3: ['oculus-touch.A-or-X', 'oculus-touch.X'],
-      button4: ['oculus-touch.Y', 'menu'],
+      button3: 'X',
+      button4: ['Y', 'menu'],
       button5: 'surface'
     },
     'right': {
@@ -58685,10 +58648,19 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       button0: 'thumbstick',
       button1: 'trigger',
       button2: 'grip',
-      button3: ['oculus-touch.A-or-X', 'oculus-touch.A'],
-      button4: ['oculus-touch.B', 'menu'],
+      button3: 'A',
+      button4: ['B', 'menu'],
       button5: 'surface'
     }
+  },
+
+  bindMethods: function () {
+    this.onModelLoaded = bind(this.onModelLoaded, this);
+    this.onControllersUpdate = bind(this.onControllersUpdate, this);
+    this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
+    this.removeControllersUpdateListener = bind(this.removeControllersUpdateListener, this);
+    this.onGamepadConnected = bind(this.onGamepadConnected, this);
+    this.onGamepadDisconnected = bind(this.onGamepadDisconnected, this);
   },
 
   init: function () {
@@ -58699,15 +58671,11 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.onButtonUp = function (evt) { self.onButtonEvent(evt.detail.id, 'up'); };
     this.onButtonTouchStart = function (evt) { self.onButtonEvent(evt.detail.id, 'touchstart'); };
     this.onButtonTouchEnd = function (evt) { self.onButtonEvent(evt.detail.id, 'touchend'); };
-    this.onModelLoaded = bind(this.onModelLoaded, this);
     this.controllerPresent = false;
     this.everGotGamepadEvent = false;
     this.lastControllerCheck = 0;
-    this.onTrackedControlsTick = bind(this.onTrackedControlsTick, this);
-    this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
-    this.removeTrackedControlsTickListener = bind(this.removeTrackedControlsTickListener, this);
-    this.onGamepadConnected = bind(this.onGamepadConnected, this);
-    this.onGamepadDisconnected = bind(this.onGamepadDisconnected, this);
+    this.previousButtonValues = {};
+    this.bindMethods();
   },
 
   addEventListeners: function () {
@@ -58732,28 +58700,26 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
 
   checkIfControllerPresent: function () {
     var data = this.data;
-    var isPresent = trackedControlsUtils.isControllerPresent(GAMEPAD_ID_PREFIX, { hand: data.hand });
-
-    if (isPresent !== this.controllerPresent) {
-      this.controllerPresent = isPresent;
-      if (isPresent) {
-        this.injectTrackedControls(); // inject track-controls
-        this.addEventListeners();
-      } else {
-        this.removeEventListeners();
-      }
+    var isPresent = isControllerPresent(GAMEPAD_ID_PREFIX, { hand: data.hand });
+    if (isPresent === this.controllerPresent) { return; }
+    this.controllerPresent = isPresent;
+    if (isPresent) {
+      this.injectTrackedControls(); // inject track-controls
+      this.addEventListeners();
+    } else {
+      this.removeEventListeners();
     }
   },
 
   onGamepadConnected: function (evt) {
     this.everGotGamepadEvent = true;
-    this.removeTrackedControlsTickListener();
+    this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
     this.everGotGamepadEvent = true;
-    this.removeTrackedControlsTickListener();
+    this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
@@ -58761,18 +58727,19 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.checkIfControllerPresent();
     window.addEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
-    this.addTrackedControlsTickListener();
+    this.addControllersUpdateListener();
   },
 
   pause: function () {
     window.removeEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.removeEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
-    this.removeTrackedControlsTickListener();
+    this.removeControllersUpdateListener();
     this.removeEventListeners();
   },
 
-  addModel: function () {
+  updateControllerModel: function () {
     var objUrl, mtlUrl;
+    if (!this.data.model) { return; }
     if (this.data.hand === 'right') {
       objUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_URL_R + ')';
       mtlUrl = 'url(' + TOUCH_CONTROLLER_MODEL_OBJ_MTL_R + ')';
@@ -58794,52 +58761,45 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       controller: 0,
       rotationOffset: data.rotationOffset !== -999 ? data.rotationOffset : isRightHand ? -90 : 90
     });
-
-    if (!data.model) { return; }
-    this.addModel();
+    this.updateControllerModel();
   },
 
-  addTrackedControlsTickListener: function () {
-    this.el.sceneEl.addEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  addControllersUpdateListener: function () {
+    this.el.sceneEl.addEventListener('controllersupdate', this.onControllersUpdate, false);
   },
 
-  removeTrackedControlsTickListener: function () {
-    this.el.sceneEl.removeEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  removeControllersUpdateListener: function () {
+    this.el.sceneEl.removeEventListener('controllersupdate', this.onControllersUpdate, false);
   },
 
-  onTrackedControlsTick: function () {
-    if (!this.everGotGamepadEvent) {
-      this.checkIfControllerPresent();
-    }
+  onControllersUpdate: function () {
+    if (!this.everGotGamepadEvent) { this.checkIfControllerPresent(); }
+  },
+
+  isFakeTouch: function (analogValue) {
+    return analogValue && (analogValue >= FAKE_TOUCH_THRESHOLD);
   },
 
   onButtonChanged: function (evt) {
     var button = this.mapping[this.data.hand]['button' + evt.detail.id];
     var buttonMeshes = this.buttonMeshes;
-    var value;
+    var lastFakeTouch;
+    var analogValue;
+    var thisFakeTouch;
+
     // at the moment, if trigger or grip,
     // touch events aren't happening (touched is stuck true);
-    // synthesize touch events from very low values
-    if (button === 'trigger' || button === 'grip') {
-      var lastValue = this['last-' + button + '-value'];
-      var lastFakeTouch = false;
-      if (lastValue) { lastFakeTouch = (lastValue >= FAKE_TOUCH_THRESHOLD); }
-      var thisValue = evt.detail.state.value;
-      var thisFakeTouch = false;
-      if (thisValue) { thisFakeTouch = (thisValue >= FAKE_TOUCH_THRESHOLD); }
-      this['last-' + button + '-value'] = thisValue;
-      if (thisFakeTouch !== lastFakeTouch) {
-        if (thisFakeTouch) {
-          this.onButtonTouchStart(evt);
-        } else {
-          this.onButtonTouchEnd(evt);
-        }
-      }
+    // synthesize touch events from very low analog values
+    if (button !== 'trigger' && button !== 'grip') { return; }
+    analogValue = evt.detail.state.value;
+    lastFakeTouch = this.isFakeTouch(this.previousButtonValues[button]);
+    this.previousButtonValues[button] = analogValue;
+    thisFakeTouch = this.isFakeTouch(analogValue);
+    if (thisFakeTouch !== lastFakeTouch) {
+      (thisFakeTouch ? this.onButtonTouchStart : this.onButtonTouchEnd)(evt);
     }
-    if (typeof button === 'undefined' || typeof buttonMeshes === 'undefined') { return; }
     if (button !== 'trigger' || !buttonMeshes || !buttonMeshes.trigger) { return; }
-    value = evt.detail.state.value;
-    buttonMeshes.trigger.rotation.x = -value * (Math.PI / 12);
+    buttonMeshes.trigger.rotation.x = -analogValue * (Math.PI / 12);
   },
 
   onModelLoaded: function (evt) {
@@ -58853,14 +58813,14 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     buttonMeshes.grip = controllerObject3D.getObjectByName(leftHand ? 'grip tooche1 group3' : 'grip tooche group4');
     buttonMeshes.thumbstick = controllerObject3D.getObjectByName(leftHand ? 'tooche1 group3 control_surface group2 thumb_stick' : 'tooche group4 control_surface group2 thumb_stick');
     buttonMeshes.trigger = controllerObject3D.getObjectByName(leftHand ? 'tooche1 group3 trigger' : 'tooche group4 trigger');
-    buttonMeshes['oculus-touch:X'] = controllerObject3D.getObjectByName('tooche1 group3 control_surface group2 button2');
-    buttonMeshes['oculus-touch:A'] = controllerObject3D.getObjectByName('tooche group4 control_surface group2 button2');
-    buttonMeshes['oculus-touch:Y'] = controllerObject3D.getObjectByName('tooche1 group3 control_surface group2 button3');
-    buttonMeshes['oculus-touch:B'] = controllerObject3D.getObjectByName('tooche group4 control_surface group2 button3');
+    buttonMeshes['X'] = controllerObject3D.getObjectByName('tooche1 group3 control_surface group2 button2');
+    buttonMeshes['A'] = controllerObject3D.getObjectByName('tooche group4 control_surface group2 button2');
+    buttonMeshes['Y'] = controllerObject3D.getObjectByName('tooche1 group3 control_surface group2 button3');
+    buttonMeshes['B'] = controllerObject3D.getObjectByName('tooche group4 control_surface group2 button3');
     buttonMeshes.surface = controllerObject3D.getObjectByName(leftHand ? 'tooche1 group3 face control_surface group2' : 'tooche group4 face control_surface group2');
 
     // Offset pivot point
-    controllerObject3D.position.set(0, -0.015, 0.04);
+    controllerObject3D.position = PIVOT_OFFSET;
   },
 
   onButtonEvent: function (id, evtName) {
@@ -58873,21 +58833,25 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     } else {
       this.el.emit(buttonName + evtName);
     }
-    if (!this.data.model) { return; }
+    this.updateModel(buttonName, evtName);
+  },
+
+  updateModel: function (buttonName, evtName) {
+    var i;
     if (Array.isArray(buttonName)) {
       for (i = 0; i < buttonName.length; i++) {
-        this.updateModel(buttonName[i], evtName);
+        this.updateButtonModel(buttonName[i], evtName);
       }
     } else {
-      this.updateModel(buttonName, evtName);
+      this.updateButtonModel(buttonName, evtName);
     }
   },
 
-  updateModel: function (buttonName, state) {
+  updateButtonModel: function (buttonName, state) {
     var color = state === 'up' ? this.data.buttonColor : this.data.buttonHighlightColor;
     var buttonMeshes = this.buttonMeshes;
-    if (!buttonMeshes) { return; }
-    if (buttonMeshes[buttonName]) {
+    if (!this.data.model) { return; }
+    if (buttonMeshes && buttonMeshes[buttonName]) {
       buttonMeshes[buttonName].material.color.set(color);
     }
   }
@@ -60444,12 +60408,12 @@ module.exports.Component = registerComponent('visible', {
 },{"../core/component":63}],51:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var bind = _dereq_('../utils/bind');
-var trackedControlsUtils = _dereq_('../utils/tracked-controls');
+var isControllerPresent = _dereq_('../utils/tracked-controls').isControllerPresent;
 
-const VIVE_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
-const VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
+var VIVE_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
+var VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
 
-const GAMEPAD_ID_PREFIX = 'OpenVR Gamepad';
+var GAMEPAD_ID_PREFIX = 'OpenVR Gamepad';
 
 /**
  * Vive Controls Component
@@ -60460,7 +60424,7 @@ const GAMEPAD_ID_PREFIX = 'OpenVR Gamepad';
 module.exports.Component = registerComponent('vive-controls', {
   schema: {
     hand: {default: 'left'},
-    buttonColor: { default: '#FAFAFA' },  // Off-white.
+    buttonColor: {default: '#FAFAFA'},  // Off-white.
     buttonHighlightColor: {default: '#22D1EE'},  // Light blue.
     model: {default: true},
     rotationOffset: {default: 0} // use -999 as sentinel value to auto-determine based on hand
@@ -60482,6 +60446,15 @@ module.exports.Component = registerComponent('vive-controls', {
     button4: 'system'
   },
 
+  bindMethods: function () {
+    this.onModelLoaded = bind(this.onModelLoaded, this);
+    this.onControllersUpdate = bind(this.onControllersUpdate, this);
+    this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
+    this.removeControllersUpdateListener = bind(this.removeControllersUpdateListener, this);
+    this.onGamepadConnected = bind(this.onGamepadConnected, this);
+    this.onGamepadDisconnected = bind(this.onGamepadDisconnected, this);
+  },
+
   init: function () {
     var self = this;
     this.animationActive = 'pointing';
@@ -60490,15 +60463,10 @@ module.exports.Component = registerComponent('vive-controls', {
     this.onButtonUp = function (evt) { self.onButtonEvent(evt.detail.id, 'up'); };
     this.onButtonTouchStart = function (evt) { self.onButtonEvent(evt.detail.id, 'touchstart'); };
     this.onButtonTouchEnd = function (evt) { self.onButtonEvent(evt.detail.id, 'touchend'); };
-    this.onModelLoaded = bind(this.onModelLoaded, this);
     this.controllerPresent = false;
     this.everGotGamepadEvent = false;
     this.lastControllerCheck = 0;
-    this.onTrackedControlsTick = bind(this.onTrackedControlsTick, this);
-    this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
-    this.removeTrackedControlsTickListener = bind(this.removeTrackedControlsTickListener, this);
-    this.onGamepadConnected = bind(this.onGamepadConnected, this);
-    this.onGamepadDisconnected = bind(this.onGamepadDisconnected, this);
+    this.bindMethods();
   },
 
   addEventListeners: function () {
@@ -60524,28 +60492,28 @@ module.exports.Component = registerComponent('vive-controls', {
   checkIfControllerPresent: function () {
     var data = this.data;
     var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
-    var isPresent = trackedControlsUtils.isControllerPresent(GAMEPAD_ID_PREFIX, { index: controller });
+    var isPresent = isControllerPresent(GAMEPAD_ID_PREFIX, { index: controller });
 
-    if (isPresent !== this.controllerPresent) {
-      this.controllerPresent = isPresent;
-      if (isPresent) {
-        this.injectTrackedControls(); // inject track-controls
-        this.addEventListeners();
-      } else {
-        this.removeEventListeners();
-      }
+    if (isPresent === this.controllerPresent) { return; }
+
+    this.controllerPresent = isPresent;
+    if (isPresent) {
+      this.injectTrackedControls(); // inject track-controls
+      this.addEventListeners();
+    } else {
+      this.removeEventListeners();
     }
   },
 
   onGamepadConnected: function (evt) {
     this.everGotGamepadEvent = true;
-    this.removeTrackedControlsTickListener();
+    this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
     this.everGotGamepadEvent = true;
-    this.removeTrackedControlsTickListener();
+    this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
@@ -60553,13 +60521,13 @@ module.exports.Component = registerComponent('vive-controls', {
     this.checkIfControllerPresent();
     window.addEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
-    this.addTrackedControlsTickListener();
+    this.addControllersUpdateListener();
   },
 
   pause: function () {
     window.removeEventListener('gamepadconnected', this.onGamepadConnected, false);
     window.removeEventListener('gamepaddisconnected', this.onGamepadDisconnected, false);
-    this.removeTrackedControlsTickListener();
+    this.removeControllersUpdateListener();
     this.removeEventListeners();
   },
 
@@ -60578,26 +60546,23 @@ module.exports.Component = registerComponent('vive-controls', {
     el.setAttribute('obj-model', {obj: objUrl, mtl: mtlUrl});
   },
 
-  addTrackedControlsTickListener: function () {
-    this.el.sceneEl.addEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  addControllersUpdateListener: function () {
+    this.el.sceneEl.addEventListener('controllersupdate', this.onControllersUpdate, false);
   },
 
-  removeTrackedControlsTickListener: function () {
-    this.el.sceneEl.removeEventListener('tracked-controls.tick', this.onTrackedControlsTick, false);
+  removeControllersUpdateListener: function () {
+    this.el.sceneEl.removeEventListener('controllersupdate', this.onControllersUpdate, false);
   },
 
-  onTrackedControlsTick: function () {
-    if (!this.everGotGamepadEvent) {
-      this.checkIfControllerPresent();
-    }
+  onControllersUpdate: function () {
+    if (!this.everGotGamepadEvent) { this.checkIfControllerPresent(); }
   },
 
   onButtonChanged: function (evt) {
     var button = this.mapping['button' + evt.detail.id];
     var buttonMeshes = this.buttonMeshes;
     var value;
-    if (typeof button === 'undefined' || typeof buttonMeshes === 'undefined') { return; }
-    if (button !== 'trigger' || !buttonMeshes) { return; }
+    if (!button || !buttonMeshes || button !== 'trigger') { return; }
     value = evt.detail.state.value;
     buttonMeshes.trigger.rotation.x = -value * (Math.PI / 12);
   },
@@ -60629,17 +60594,22 @@ module.exports.Component = registerComponent('vive-controls', {
     } else {
       this.el.emit(buttonName + evtName);
     }
+    this.updateModel(buttonName, evtName);
+  },
+
+  updateModel: function (buttonName, evtName) {
+    var i;
     if (!this.data.model) { return; }
     if (Array.isArray(buttonName)) {
       for (i = 0; i < buttonName.length; i++) {
-        this.updateModel(buttonName[i], evtName);
+        this.updateButtonModel(buttonName[i], evtName);
       }
     } else {
-      this.updateModel(buttonName, evtName);
+      this.updateButtonModel(buttonName, evtName);
     }
   },
 
-  updateModel: function (buttonName, state) {
+  updateButtonModel: function (buttonName, state) {
     var color = state === 'up' ? this.data.buttonColor : this.data.buttonHighlightColor;
     var buttonMeshes = this.buttonMeshes;
     if (!buttonMeshes) { return; }
@@ -66826,20 +66796,20 @@ module.exports.System = registerSystem('tracked-controls', {
     });
   },
 
-  rebuildControllerList: function () {
+  updateControllerList: function () {
     var controllers = this.controllers = [];
-    trackedControlsUtils.enumerateGamepads(function (gamepad) {
+    var gamepads = trackedControlsUtils.getGamepadsByPrefix('');
+    for (var i = 0; i < gamepads.length; i++) {
+      var gamepad = gamepads[i];
       if (gamepad && gamepad.pose) { controllers.push(gamepad); }
-    });
+    }
   },
 
-  tick: function () {
-    var now = Date.now();
-    if (now >= this.lastControllerCheck + 10) {
-      this.lastControllerCheck = now;
-      this.rebuildControllerList();
-      this.sceneEl.emit('tracked-controls.tick', { timestamp: now, controllers: this.controllers });
-    }
+  tick: function (time) {
+    if (time < this.lastControllerCheck + 10) { return; }
+    this.lastControllerCheck = time;
+    this.updateControllerList();
+    this.sceneEl.emit('controllersupdated', { timestamp: time, controllers: this.controllers });
   }
 });
 
@@ -67652,38 +67622,26 @@ module.exports.transformKeysToCamelCase = transformKeysToCamelCase;
 
 },{"style-attr":12}],128:[function(_dereq_,module,exports){
 /**
- * Enumerate gamepads and apply callback function to each.
+ * Return enumerated gamepads matching id prefix.
  *
- * @param {object} callback - callback function that takes gamepad as argument.
  * @param {object} idPrefix - prefix to match in gamepad id, if any.
  */
-module.exports.enumerateGamepads = function (callback, idPrefix) {
+module.exports.getGamepadsByPrefix = function (idPrefix) {
+  var gamepadsList = [];
+  var gamepad;
   var gamepads = navigator.getGamepads && navigator.getGamepads();
-  if (!gamepads) { return; }
-  for (var i = 0; i < gamepads.length; ++i) {
-    var gamepad = gamepads[i];
-    if (!idPrefix || idPrefix === '' || gamepad.id.indexOf(idPrefix) === 0) {
-      callback(gamepad, i);
-    }
-  }
-};
+  if (!gamepads) { return gamepadsList; }
 
-/**
- * Enumerate controllers (as built by system tick, e.g. that have pose) and apply callback function to each.
- *
- * @param {object} callback - callback function that takes gamepad as argument.
- * @param {object} idPrefix - prefix to match in gamepad id, if any.
- */
-module.exports.enumerateControllers = function (callback, idPrefix) {
-  var sceneEl = document.querySelector('a-scene');
-  var gamepads = sceneEl && sceneEl.systems['tracked-controls'] && sceneEl.systems['tracked-controls'].controllers;
-  if (!gamepads) { return; }
   for (var i = 0; i < gamepads.length; ++i) {
-    var gamepad = gamepads[i];
-    if (!idPrefix || idPrefix === '' || gamepad.id.indexOf(idPrefix) === 0) {
-      callback(gamepad, i);
+    gamepad = gamepads[i];
+    // need to check that gamepad is valid, since browsers may return array of null values
+    if (gamepad) {
+      if (!idPrefix || gamepad.id.indexOf(idPrefix) === 0) {
+        gamepadsList.push(gamepad);
+      }
     }
   }
+  return gamepadsList;
 };
 
 /**
@@ -67693,30 +67651,35 @@ module.exports.enumerateControllers = function (callback, idPrefix) {
  * @param {object} queryObject - map of values to match (hand; index among controllers with idPrefix)
  */
 module.exports.isControllerPresent = function (idPrefix, queryObject) {
-  var isMatch = false;
+  var isPresent = false;
+  var index = 0;
+  var gamepad;
+  var isPrefixMatch;
   var sceneEl = document.querySelector('a-scene');
-  var gamepads = sceneEl && sceneEl.systems['tracked-controls'] && sceneEl.systems['tracked-controls'].controllers;
-  if ((!gamepads || gamepads.length === 0) && sceneEl && sceneEl.systems['tracked-controls']) {
-    sceneEl.systems['tracked-controls'].rebuildControllerList();
+  var gamepads;
+  if (!sceneEl || !sceneEl.systems['tracked-controls']) { return isPresent; }
+
+  gamepads = sceneEl.systems['tracked-controls'].controllers;
+  if (!gamepads || gamepads.length === 0) {
+    sceneEl.systems['tracked-controls'].updateControllerList();
     gamepads = sceneEl.systems['tracked-controls'].controllers;
   }
-  if (gamepads) {
-    var index = 0;
-    for (var i = 0; i < gamepads.length; ++i) {
-      var gamepad = gamepads[i];
-      var isPrefixMatch = (!idPrefix || idPrefix === '' || gamepad.id.indexOf(idPrefix) === 0);
-      isMatch = isPrefixMatch;
-      if (isMatch && queryObject.hand) {
-        isMatch = (gamepad.hand === queryObject.hand);
-      }
-      if (isMatch && queryObject.index) {
-        isMatch = (index === queryObject.index); // need to use count of gamepads with idPrefix
-      }
-      if (isMatch) { break; }
-      if (isPrefixMatch) { index++; } // update count of gamepads with idPrefix
+  if (!gamepads) { return isPresent; }
+
+  for (var i = 0; i < gamepads.length; ++i) {
+    gamepad = gamepads[i];
+    isPrefixMatch = (!idPrefix || idPrefix === '' || gamepad.id.indexOf(idPrefix) === 0);
+    isPresent = isPrefixMatch;
+    if (isPresent && queryObject.hand) {
+      isPresent = gamepad.hand === queryObject.hand;
     }
+    if (isPresent && queryObject.index) {
+      isPresent = index === queryObject.index; // need to use count of gamepads with idPrefix
+    }
+    if (isPresent) { break; }
+    if (isPrefixMatch) { index++; } // update count of gamepads with idPrefix
   }
-  return isMatch;
+  return isPresent;
 };
 
 

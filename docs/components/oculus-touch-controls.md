@@ -28,26 +28,40 @@ mappings, events, and a Touch controller model.
 
 ## Events
 
-| Event Name     | Description             |
-| ----------     | -----------             |
-| gripdown       | Grip button pressed.    |
-| gripup         | Grip button released.   |
-| menudown       | Menu button pressed.    |
-| menuup         | Menu button released.   |
-| systemdown     | System button pressed.  |
-| systemup       | System button released. |
-| thumbstickup   | Thumbstick pressed.     |
-| thumbstickdown | Thumbstick released.    |
-| triggerup      | Trigger pressed.        |
-| triggerdown    | Trigger released.       |
-| Aup            | A button pressed.       |
-| Adown          | A button released.      |
-| Bup            | B button pressed.       |
-| Bdown          | B button released.      |
-| Xup            | X button pressed.       |
-| Xdown          | X button released.      |
-| Yup            | Y button pressed.       |
-| Ydown          | Y button released.      |
+| Event Name           | Description                    |
+| ----------           | -----------                    |
+| triggerdown          | Trigger pressed.               |
+| triggerup            | Trigger released.              |
+| triggertouchstart    | Trigger touched.               |
+| triggertouchend      | Trigger no longer touched.     |
+| thumbstickdown       | Thumbstick pressed.            |
+| thumbstickup         | Thumbstick released.           |
+| thumbsticktouchstart | Thumbstick touched.            |
+| thumbsticktouchend   | Thumbstick no longer touched.  |
+| gripdown             | Grip button pressed.           |
+| gripup               | Grip button released.          |
+| griptouchstart       | Grip button touched.           |
+| griptouchend         | Grip button no longer touched. |
+| Adown                | A button pressed.              |
+| Aup                  | A button released.             |
+| Atouchstart          | A button touched.              |
+| Atouchend            | A button no longer touched.    |
+| Bdown                | B button pressed.              |
+| Bup                  | B button released.             |
+| Btouchstart          | B button touched.              |
+| Btouchend            | B button no longer touched.    |
+| Xdown                | X button pressed.              |
+| Xup                  | X button released.             |
+| Xtouchstart          | X button touched.              |
+| Xtouchend            | X button no longer touched.    |
+| Ydown                | Y button pressed.              |
+| Yup                  | Y button released.             |
+| Ytouchstart          | Y button touched.              |
+| Ytouchend            | Y button no longer touched.    |
+| menudown             | Menu button pressed.           |
+| menuup               | Menu button released.          |
+| systemdown           | System button pressed.         |
+| systemup             | System button released.        |
 
 ## Assets
 

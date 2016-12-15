@@ -7,9 +7,10 @@ parent_section: components
 
 [tracked]: ./tracked-controls.md
 [vive]: ./vive-controls.md
+[oculustouch]: ./oculus-touch-controls.md
 
 The hand-controls gives tracked hands (using a prescribed model) with animated
-gestures. It wraps the [vive-controls component][vive], which wraps the
+gestures. It wraps the [vive-controls][vive] and [oculus-touch-controls][oculustouch] components, which wrap the
 [tracked-controls component][tracked]. It adds additional events, semantically
 named, and handles hand animations.
 
@@ -29,14 +30,18 @@ named, and handles hand animations.
 
 ## Events
 
-| Event Name | Description                                          |
-| ---------- | -----------                                          |
-| gripclose  | Grip buttons pressed. Hand is closed.                |
-| gripopen   | Grip buttons released. Hand is open.                 |
-| pointup    | Trigger button pressed. Index finger pointing up.    |
-| pointdown  | Trigger button released. Index finger pointing down. |
-| thumbup    | Thumbpad pressed. Thumb is pointing up.              |
-| thumbdown  | Thumbpad released. Thumb is pointing down.           |
+| Event Name    | Description                                                        |
+| ----------    | -----------                                                        |
+| gripclose     | 'fist': grip active, trigger active, trackpad/surface active       |
+| gripopen      | no longer 'fist'                                                   |
+| pointup       | 'touch': grip inactive, trigger active, trackpad/surface inactive  |
+| pointdown     | no longer 'touch'                                                  |
+| thumbup       | 'thumb': grip active, trigger active, trackpad/surface inactive    |
+| thumbdown     | no longer 'thumb'                                                  |
+| pointingstart | 'pointing': grip active, trigger inactive, trackpad/surface active |
+| pointingend   | no longer 'pointing'                                               |
+| pistolstart   | 'pistol': grip active, trigger inactive, trackpad/surface inactive |
+| pistolend     | no longer 'pistol'                                                 |
 
 ## Assets
 

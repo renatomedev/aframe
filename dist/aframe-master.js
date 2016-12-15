@@ -57770,19 +57770,29 @@ module.exports.Component = registerComponent('hand-controls', {
 
   // map to old vive-specific event names for now
   gestureEventMapping: {
-    'fist': 'grip',  // e.g. grip button down
-    'touch': 'point', // e.g. trigger button down
-    'thumb': 'thumb'  // e.g. thumbs up pose - grip button down, trackpad / surface buttons up
+    'fist': 'grip',         // fist: e.g. grip active, trigger active, trackpad / surface active
+    'touch': 'point',       // 'touch' e.g. trigger active, grip not active
+    'thumb': 'thumb',       // thumbs up: e.g. grip active, trigger active, trackpad / surface not active
+    'pointing': 'pointing', // pointing: e.g. grip active, trackpad / surface active, trigger not active
+    'pistol': 'pistol'      // pistol: e.g. grip active, trigger not active, trackpad / surface not active
+  },
+
+  gestureEventName: function (gesture, active) {
+    var eventName = this.gestureEventMapping[gesture || ''];
+    if (eventName === 'grip') { return eventName + (active ? 'close' : 'open'); }
+    if (eventName === 'point' || eventName === 'thumb') { return eventName + (active ? 'up' : 'down'); }
+    if (eventName === 'pointing' || eventName === 'pistol') { return eventName + (active ? 'start' : 'end'); }
+    return null;
   },
 
   emitGestureEvents: function (gesture, lastGesture) {
     var el = this.el;
     var eventName;
     if (lastGesture !== gesture) {
-      eventName = this.gestureEventMapping[lastGesture || ''];
-      if (eventName) { el.emit(eventName + (eventName === 'grip' ? 'open' : 'down')); }
-      eventName = this.gestureEventMapping[gesture || ''];
-      if (eventName) { el.emit(eventName + (eventName === 'grip' ? 'close' : 'up')); }
+      eventName = this.gestureEventName(lastGesture, false);
+      if (eventName) { el.emit(eventName); }
+      eventName = this.gestureEventName(gesture, true);
+      if (eventName) { el.emit(eventName); }
     }
   },
 
@@ -57805,7 +57815,7 @@ module.exports.Component = registerComponent('hand-controls', {
     if (animationActive) { mesh.play(animationActive, 0); }
 
     // play new animation.
-    mesh.mixer.clipAction(animation).loop = 2200;
+    mesh.mixer.clipAction(animation).loop = 200;
     mesh.mixer.clipAction(animation).clampWhenFinished = true;
     mesh.mixer.clipAction(animation).timeScale = timeScale;
     mesh.play(animation, 1);
@@ -58608,7 +58618,7 @@ var PIVOT_OFFSET = {x: 0, y: -0.015, z: 0.04};
 
 // currently, browser bugs prevent capacitive touch events from firing on trigger and grip;
 // however those have analog values, and this (below button-down values) can be used to fake them
-var FAKE_TOUCH_THRESHOLD = 0.00001;
+var EMULATED_TOUCH_THRESHOLD = 0.00001;
 
 /**
  * Oculus Touch Controls Component
@@ -58619,8 +58629,8 @@ var FAKE_TOUCH_THRESHOLD = 0.00001;
 module.exports.Component = registerComponent('oculus-touch-controls', {
   schema: {
     hand: {default: 'left'},
-    buttonColor: { default: '#FAFAFA' },  // Off-white.
-    buttonHighlightColor: {default: '#22D1EE'},  // Light blue.
+    buttonColor: {default: '#FAFAFA'},          // Off-white.
+    buttonHighlightColor: {default: '#22D1EE'}, // Light blue.
     model: {default: true},
     rotationOffset: {default: 0} // no default offset; -999 is sentinel value to auto-determine based on hand
   },
@@ -58639,7 +58649,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       button1: 'trigger',
       button2: 'grip',
       button3: 'X',
-      button4: ['Y', 'menu'],
+      button4: 'Y',
       button5: 'surface'
     },
     'right': {
@@ -58649,7 +58659,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       button1: 'trigger',
       button2: 'grip',
       button3: 'A',
-      button4: ['B', 'menu'],
+      button4: 'B',
       button5: 'surface'
     }
   },
@@ -58776,27 +58786,29 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     if (!this.everGotGamepadEvent) { this.checkIfControllerPresent(); }
   },
 
-  isFakeTouch: function (analogValue) {
-    return analogValue && (analogValue >= FAKE_TOUCH_THRESHOLD);
+  // currently, browser bugs prevent capacitive touch events from firing on trigger and grip;
+  // however those have analog values, and this (below button-down values) can be used to fake them
+  isEmulatedTouchEvent: function (analogValue) {
+    return analogValue && (analogValue >= EMULATED_TOUCH_THRESHOLD);
   },
 
   onButtonChanged: function (evt) {
     var button = this.mapping[this.data.hand]['button' + evt.detail.id];
     var buttonMeshes = this.buttonMeshes;
-    var lastFakeTouch;
+    var isPreviousValueEmulatedTouch;
     var analogValue;
-    var thisFakeTouch;
+    var isEmulatedTouch;
 
     // at the moment, if trigger or grip,
     // touch events aren't happening (touched is stuck true);
     // synthesize touch events from very low analog values
     if (button !== 'trigger' && button !== 'grip') { return; }
     analogValue = evt.detail.state.value;
-    lastFakeTouch = this.isFakeTouch(this.previousButtonValues[button]);
+    isPreviousValueEmulatedTouch = this.isEmulatedTouchEvent(this.previousButtonValues[button]);
     this.previousButtonValues[button] = analogValue;
-    thisFakeTouch = this.isFakeTouch(analogValue);
-    if (thisFakeTouch !== lastFakeTouch) {
-      (thisFakeTouch ? this.onButtonTouchStart : this.onButtonTouchEnd)(evt);
+    isEmulatedTouch = this.isEmulatedTouchEvent(analogValue);
+    if (isEmulatedTouch !== isPreviousValueEmulatedTouch) {
+      (isEmulatedTouch ? this.onButtonTouchStart : this.onButtonTouchEnd)(evt);
     }
     if (button !== 'trigger' || !buttonMeshes || !buttonMeshes.trigger) { return; }
     buttonMeshes.trigger.rotation.x = -analogValue * (Math.PI / 12);
@@ -65247,6 +65259,10 @@ var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
 
 registerPrimitive('a-obj-model', utils.extendDeep({}, meshMixin, {
+  defaultComponents: {
+    'obj-model': {}
+  },
+
   mappings: {
     src: 'obj-model.obj',
     mtl: 'obj-model.mtl'
@@ -66787,7 +66803,7 @@ module.exports.System = registerSystem('tracked-controls', {
   init: function () {
     var self = this;
     this.controllers = [];
-    this.lastControllerCheck = 0;
+    this.lastControllersUpdate = 0;
     if (!navigator.getVRDisplays) { return; }
     navigator.getVRDisplays().then(function (displays) {
       if (displays.length > 0) {
@@ -66806,8 +66822,8 @@ module.exports.System = registerSystem('tracked-controls', {
   },
 
   tick: function (time) {
-    if (time < this.lastControllerCheck + 10) { return; }
-    this.lastControllerCheck = time;
+    if (time < this.lastControllersUpdate + 10) { return; }
+    this.lastControllersUpdate = time;
     this.updateControllerList();
     this.sceneEl.emit('controllersupdated', { timestamp: time, controllers: this.controllers });
   }

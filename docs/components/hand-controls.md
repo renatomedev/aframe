@@ -40,5 +40,5 @@ named, and handles hand animations.
 
 ## Assets
 
-- [Left hand model](https://media.aframe.io/controllers/hands/leftHand.json)
-- [Right hand model](https://media.aframe.io/controllers/hands/rightHand.json)
+- [Left hand model](https://cdn.aframe.io/controllers/oculus-hands/leftHand.json)
+- [Right hand model](https://cdn.aframe.io/controllers/oculus-hands/rightHand.json)

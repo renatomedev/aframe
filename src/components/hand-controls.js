@@ -228,7 +228,7 @@ module.exports.Component = registerComponent('hand-controls', {
     if (animationActive) { mesh.play(animationActive, 0); }
 
     // play new animation.
-    mesh.mixer.clipAction(animation).loop = 2200;
+    mesh.mixer.clipAction(animation).loop = 200;
     mesh.mixer.clipAction(animation).clampWhenFinished = true;
     mesh.mixer.clipAction(animation).timeScale = timeScale;
     mesh.play(animation, 1);

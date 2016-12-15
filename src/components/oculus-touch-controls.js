@@ -191,20 +191,20 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   onButtonChanged: function (evt) {
     var button = this.mapping[this.data.hand]['button' + evt.detail.id];
     var buttonMeshes = this.buttonMeshes;
-    var lastFakeTouch;
+    var isPreviousValueEmulatedTouch;
     var analogValue;
-    var thisFakeTouch;
+    var isEmulatedTouch;
 
     // at the moment, if trigger or grip,
     // touch events aren't happening (touched is stuck true);
     // synthesize touch events from very low analog values
     if (button !== 'trigger' && button !== 'grip') { return; }
     analogValue = evt.detail.state.value;
-    lastFakeTouch = this.isEmulatedTouchEvent(this.previousButtonValues[button]);
+    isPreviousValueEmulatedTouch = this.isEmulatedTouchEvent(this.previousButtonValues[button]);
     this.previousButtonValues[button] = analogValue;
-    thisFakeTouch = this.isEmulatedTouchEvent(analogValue);
-    if (thisFakeTouch !== lastFakeTouch) {
-      (thisFakeTouch ? this.onButtonTouchStart : this.onButtonTouchEnd)(evt);
+    isEmulatedTouch = this.isEmulatedTouchEvent(analogValue);
+    if (isEmulatedTouch !== isPreviousValueEmulatedTouch) {
+      (isEmulatedTouch ? this.onButtonTouchStart : this.onButtonTouchEnd)(evt);
     }
     if (button !== 'trigger' || !buttonMeshes || !buttonMeshes.trigger) { return; }
     buttonMeshes.trigger.rotation.x = -analogValue * (Math.PI / 12);

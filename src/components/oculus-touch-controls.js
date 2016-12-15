@@ -14,7 +14,7 @@ var PIVOT_OFFSET = {x: 0, y: -0.015, z: 0.04};
 
 // currently, browser bugs prevent capacitive touch events from firing on trigger and grip;
 // however those have analog values, and this (below button-down values) can be used to fake them
-var FAKE_TOUCH_THRESHOLD = 0.00001;
+var EMULATED_TOUCH_THRESHOLD = 0.00001;
 
 /**
  * Oculus Touch Controls Component
@@ -45,7 +45,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       button1: 'trigger',
       button2: 'grip',
       button3: 'X',
-      button4: ['Y', 'menu'],
+      button4: 'Y',
       button5: 'surface'
     },
     'right': {
@@ -55,7 +55,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       button1: 'trigger',
       button2: 'grip',
       button3: 'A',
-      button4: ['B', 'menu'],
+      button4: 'B',
       button5: 'surface'
     }
   },
@@ -182,8 +182,10 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     if (!this.everGotGamepadEvent) { this.checkIfControllerPresent(); }
   },
 
-  isFakeTouch: function (analogValue) {
-    return analogValue && (analogValue >= FAKE_TOUCH_THRESHOLD);
+  // currently, browser bugs prevent capacitive touch events from firing on trigger and grip;
+  // however those have analog values, and this (below button-down values) can be used to fake them
+  isEmulatedTouchEvent: function (analogValue) {
+    return analogValue && (analogValue >= EMULATED_TOUCH_THRESHOLD);
   },
 
   onButtonChanged: function (evt) {
@@ -198,9 +200,9 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     // synthesize touch events from very low analog values
     if (button !== 'trigger' && button !== 'grip') { return; }
     analogValue = evt.detail.state.value;
-    lastFakeTouch = this.isFakeTouch(this.previousButtonValues[button]);
+    lastFakeTouch = this.isEmulatedTouchEvent(this.previousButtonValues[button]);
     this.previousButtonValues[button] = analogValue;
-    thisFakeTouch = this.isFakeTouch(analogValue);
+    thisFakeTouch = this.isEmulatedTouchEvent(analogValue);
     if (thisFakeTouch !== lastFakeTouch) {
       (thisFakeTouch ? this.onButtonTouchStart : this.onButtonTouchEnd)(evt);
     }

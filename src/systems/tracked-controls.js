@@ -9,7 +9,7 @@ module.exports.System = registerSystem('tracked-controls', {
   init: function () {
     var self = this;
     this.controllers = [];
-    this.lastControllerCheck = 0;
+    this.lastControllersUpdate = 0;
     if (!navigator.getVRDisplays) { return; }
     navigator.getVRDisplays().then(function (displays) {
       if (displays.length > 0) {
@@ -28,8 +28,8 @@ module.exports.System = registerSystem('tracked-controls', {
   },
 
   tick: function (time) {
-    if (time < this.lastControllerCheck + 10) { return; }
-    this.lastControllerCheck = time;
+    if (time < this.lastControllersUpdate + 10) { return; }
+    this.lastControllersUpdate = time;
     this.updateControllerList();
     this.sceneEl.emit('controllersupdated', { timestamp: time, controllers: this.controllers });
   }

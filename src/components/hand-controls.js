@@ -183,19 +183,29 @@ module.exports.Component = registerComponent('hand-controls', {
 
   // map to old vive-specific event names for now
   gestureEventMapping: {
-    'fist': 'grip',  // e.g. grip button down
-    'touch': 'point', // e.g. trigger button down
-    'thumb': 'thumb'  // e.g. thumbs up pose - grip button down, trackpad / surface buttons up
+    'fist': 'grip',         // fist: e.g. grip active, trigger active, trackpad / surface active
+    'touch': 'point',       // 'touch' e.g. trigger active, grip not active
+    'thumb': 'thumb',       // thumbs up: e.g. grip active, trigger active, trackpad / surface not active
+    'pointing': 'pointing', // pointing: e.g. grip active, trackpad / surface active, trigger not active
+    'pistol': 'pistol'      // pistol: e.g. grip active, trigger not active, trackpad / surface not active
+  },
+
+  gestureEventName: function (gesture, active) {
+    var eventName = this.gestureEventMapping[gesture || ''];
+    if (eventName === 'grip') { return eventName + active ? 'close' : 'open'; }
+    if (eventName === 'point' || eventName === 'thumb') { return eventName + active ? 'up' : 'down'; }
+    if (eventName === 'pointing' || eventName === 'pistol') { return eventName + active ? 'start' : 'end'; }
+    return null;
   },
 
   emitGestureEvents: function (gesture, lastGesture) {
     var el = this.el;
     var eventName;
     if (lastGesture !== gesture) {
-      eventName = this.gestureEventMapping[lastGesture || ''];
-      if (eventName) { el.emit(eventName + (eventName === 'grip' ? 'open' : 'down')); }
-      eventName = this.gestureEventMapping[gesture || ''];
-      if (eventName) { el.emit(eventName + (eventName === 'grip' ? 'close' : 'up')); }
+      eventName = this.gestureEventName(lastGesture, false);
+      if (eventName) { el.emit(eventName); }
+      eventName = this.gestureEventName(gesture, true);
+      if (eventName) { el.emit(eventName); }
     }
   },
 

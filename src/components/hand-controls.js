@@ -192,9 +192,9 @@ module.exports.Component = registerComponent('hand-controls', {
 
   gestureEventName: function (gesture, active) {
     var eventName = this.gestureEventMapping[gesture || ''];
-    if (eventName === 'grip') { return eventName + active ? 'close' : 'open'; }
-    if (eventName === 'point' || eventName === 'thumb') { return eventName + active ? 'up' : 'down'; }
-    if (eventName === 'pointing' || eventName === 'pistol') { return eventName + active ? 'start' : 'end'; }
+    if (eventName === 'grip') { return eventName + (active ? 'close' : 'open'); }
+    if (eventName === 'point' || eventName === 'thumb') { return eventName + (active ? 'up' : 'down'); }
+    if (eventName === 'pointing' || eventName === 'pistol') { return eventName + (active ? 'start' : 'end'); }
     return null;
   },
 

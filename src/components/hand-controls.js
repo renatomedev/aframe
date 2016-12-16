@@ -150,6 +150,12 @@ module.exports.Component = registerComponent('hand-controls', {
     this.emitGestureEvents(this.gesture, lastGesture);
   },
 
+  isViveController: function () {
+    var trackedControls = this.el.components['tracked-controls'];
+    var controllerId = trackedControls && trackedControls.controller && trackedControls.controller.id;
+    return controllerId === 'OpenVR Gamepad';
+  },
+
   determineGesture: function () {
     var gesture;
     var isGripActive = this.pressedButtons['grip'];
@@ -157,9 +163,7 @@ module.exports.Component = registerComponent('hand-controls', {
     var isTrackpadActive = this.pressedButtons['trackpad'] || this.touchedButtons['trackpad'];
     var isTriggerActive = this.pressedButtons['trigger'] || this.touchedButtons['trigger'];
     var isABXYActive = this.touchedButtons['AorX'] || this.touchedButtons['BorY'];
-    var trackedControls = this.el.components['tracked-controls'];
-    var controllerId = trackedControls && trackedControls.controller && trackedControls.controller.id;
-    var isVive = controllerId === 'OpenVR Gamepad';
+    var isVive = this.isViveController();
     // this works well with Oculus Touch, but Vive needs tweaks
     if (isGripActive) {
       if (isVive) { gesture = 'fist'; } else
@@ -188,7 +192,8 @@ module.exports.Component = registerComponent('hand-controls', {
       return;
     }
     var animation = this.gestureAnimationMapping[gesture];
-    this.playAnimation(animation || 'touch', !animation);
+    var isVive = this.isViveController();
+    this.playAnimation(animation || 'touch', !animation && !isVive);
   },
 
   // map to old vive-specific event names for now

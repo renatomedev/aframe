@@ -14,7 +14,7 @@ var PIVOT_OFFSET = {x: 0, y: -0.015, z: 0.04};
 
 // currently, browser bugs prevent capacitive touch events from firing on trigger and grip;
 // however those have analog values, and this (below button-down values) can be used to fake them
-var EMULATED_TOUCH_THRESHOLD = 0.00001;
+var EMULATED_TOUCH_THRESHOLD = 0.001;
 
 /**
  * Oculus Touch Controls Component

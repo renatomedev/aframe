@@ -57764,7 +57764,11 @@ module.exports.Component = registerComponent('hand-controls', {
   },
 
   animateGesture: function (gesture) {
-    var animation = this.gestureAnimationMapping[gesture || ''];
+    if (!gesture) {
+      this.playAnimation('touch', true);
+      return;
+    }
+    var animation = this.gestureAnimationMapping[gesture];
     this.playAnimation(animation || 'touch', !animation);
   },
 
@@ -57778,11 +57782,12 @@ module.exports.Component = registerComponent('hand-controls', {
   },
 
   gestureEventName: function (gesture, active) {
-    var eventName = this.gestureEventMapping[gesture || ''];
+    if (!gesture) return 0;
+    var eventName = this.gestureEventMapping[gesture];
     if (eventName === 'grip') { return eventName + (active ? 'close' : 'open'); }
     if (eventName === 'point' || eventName === 'thumb') { return eventName + (active ? 'up' : 'down'); }
     if (eventName === 'pointing' || eventName === 'pistol') { return eventName + (active ? 'start' : 'end'); }
-    return null;
+    return 0;
   },
 
   emitGestureEvents: function (gesture, lastGesture) {
@@ -58618,7 +58623,7 @@ var PIVOT_OFFSET = {x: 0, y: -0.015, z: 0.04};
 
 // currently, browser bugs prevent capacitive touch events from firing on trigger and grip;
 // however those have analog values, and this (below button-down values) can be used to fake them
-var EMULATED_TOUCH_THRESHOLD = 0.00001;
+var EMULATED_TOUCH_THRESHOLD = 0.001;
 
 /**
  * Oculus Touch Controls Component

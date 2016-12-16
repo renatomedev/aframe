@@ -157,14 +157,20 @@ module.exports.Component = registerComponent('hand-controls', {
     var isTrackpadActive = this.pressedButtons['trackpad'] || this.touchedButtons['trackpad'];
     var isTriggerActive = this.pressedButtons['trigger'] || this.touchedButtons['trigger'];
     var isABXYActive = this.touchedButtons['AorX'] || this.touchedButtons['BorY'];
+    var trackedControls = this.el.components['tracked-controls'];
+    var controllerId = trackedControls && trackedControls.controller && trackedControls.controller.id;
+    var isVive = controllerId === 'OpenVR Gamepad';
+    // this works well with Oculus Touch, but Vive needs tweaks
     if (isGripActive) {
+      if (isVive) { gesture = 'fist'; } else
       if (isSurfaceActive || isABXYActive || isTrackpadActive) {
         gesture = isTriggerActive ? 'fist' : 'pointing';
       } else {
         gesture = isTriggerActive ? 'thumb' : 'pistol';
       }
     } else
-    if (isTriggerActive) { gesture = 'touch'; } // else no gesture
+    if (isTriggerActive) { gesture = isVive ? 'fist' : 'touch'; } else
+    if (isVive && isTrackpadActive) { gesture = 'pointing'; }
     return gesture;
   },
 

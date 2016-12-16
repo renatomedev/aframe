@@ -30,18 +30,18 @@ named, and handles hand animations.
 
 ## Events
 
-| Event Name    | Description                                                        |
-| ----------    | -----------                                                        |
-| gripclose     | 'fist': grip active, trigger active, trackpad/surface active       |
-| gripopen      | no longer 'fist'                                                   |
-| pointup       | 'touch': grip inactive, trigger active, trackpad/surface inactive  |
-| pointdown     | no longer 'touch'                                                  |
-| thumbup       | 'thumb': grip active, trigger active, trackpad/surface inactive    |
-| thumbdown     | no longer 'thumb'                                                  |
-| pointingstart | 'pointing': grip active, trigger inactive, trackpad/surface active |
-| pointingend   | no longer 'pointing'                                               |
-| pistolstart   | 'pistol': grip active, trigger inactive, trackpad/surface inactive |
-| pistolend     | no longer 'pistol'                                                 |
+| Event Name    | Description                                                    |
+| ----------    | -----------                                                    |
+| gripclose     | The hand is closed into a fist without thumb raised.           |
+| gripopen      | The hand is no longer closed into a fist without thumb raised. |
+| pointup       | The hand is touching or pressing the trigger only.             |
+| pointdown     | The hand is no longer touching or pressing the trigger only.   |
+| thumbup       | The hand is closed into a fist with thumb raised.              |
+| thumbdown     | The hand is no longer closed into a fist with thumb raised.    |
+| pointingstart | The hand is pointing with index finger without thumb raised.   |
+| pointingend   | The hand is no longer pointing without thumb raised.           |
+| pistolstart   | The hand is pointing with index finger and thumb raised.       |
+| pistolend     | The hand is no longer pointing with thumb raised.              |
 
 ## Assets
 

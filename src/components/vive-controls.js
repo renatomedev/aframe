@@ -59,6 +59,7 @@ module.exports.Component = registerComponent('vive-controls', {
     this.everGotGamepadEvent = false;
     this.lastControllerCheck = 0;
     this.bindMethods();
+    this.isControllerPresent = isControllerPresent; // to allow mock
   },
 
   addEventListeners: function () {
@@ -84,10 +85,8 @@ module.exports.Component = registerComponent('vive-controls', {
   checkIfControllerPresent: function () {
     var data = this.data;
     var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
-    var isPresent = isControllerPresent(GAMEPAD_ID_PREFIX, { index: controller });
-
+    var isPresent = this.isControllerPresent(this.el.sceneEl, GAMEPAD_ID_PREFIX, { index: controller });
     if (isPresent === this.controllerPresent) { return; }
-
     this.controllerPresent = isPresent;
     if (isPresent) {
       this.injectTrackedControls(); // inject track-controls

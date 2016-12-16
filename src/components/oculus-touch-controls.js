@@ -82,6 +82,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.lastControllerCheck = 0;
     this.previousButtonValues = {};
     this.bindMethods();
+    this.isControllerPresent = isControllerPresent; // to allow mock
   },
 
   addEventListeners: function () {
@@ -106,7 +107,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
 
   checkIfControllerPresent: function () {
     var data = this.data;
-    var isPresent = isControllerPresent(GAMEPAD_ID_PREFIX, { hand: data.hand });
+    var isPresent = this.isControllerPresent(this.el.sceneEl, GAMEPAD_ID_PREFIX, { hand: data.hand });
     if (isPresent === this.controllerPresent) { return; }
     this.controllerPresent = isPresent;
     if (isPresent) {

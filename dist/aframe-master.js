@@ -57815,7 +57815,7 @@ module.exports.Component = registerComponent('hand-controls', {
     if (animationActive) { mesh.play(animationActive, 0); }
 
     // play new animation.
-    mesh.mixer.clipAction(animation).loop = 200;
+    mesh.mixer.clipAction(animation).loop = 2200;
     mesh.mixer.clipAction(animation).clampWhenFinished = true;
     mesh.mixer.clipAction(animation).timeScale = timeScale;
     mesh.play(animation, 1);
@@ -58686,6 +58686,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
     this.lastControllerCheck = 0;
     this.previousButtonValues = {};
     this.bindMethods();
+    this.isControllerPresent = isControllerPresent; // to allow mock
   },
 
   addEventListeners: function () {
@@ -58710,7 +58711,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
 
   checkIfControllerPresent: function () {
     var data = this.data;
-    var isPresent = isControllerPresent(GAMEPAD_ID_PREFIX, { hand: data.hand });
+    var isPresent = this.isControllerPresent(this.el.sceneEl, GAMEPAD_ID_PREFIX, { hand: data.hand });
     if (isPresent === this.controllerPresent) { return; }
     this.controllerPresent = isPresent;
     if (isPresent) {
@@ -60251,7 +60252,7 @@ var THREE = _dereq_('../lib/three');
 module.exports.Component = registerComponent('tracked-controls', {
   schema: {
     controller: {default: 0},
-    id: {default: 'OpenVR Gamepad'},
+    id: {default: 'Match none by default!'},
     rotationOffset: {default: 0}
   },
 
@@ -60479,6 +60480,7 @@ module.exports.Component = registerComponent('vive-controls', {
     this.everGotGamepadEvent = false;
     this.lastControllerCheck = 0;
     this.bindMethods();
+    this.isControllerPresent = isControllerPresent; // to allow mock
   },
 
   addEventListeners: function () {
@@ -60504,10 +60506,8 @@ module.exports.Component = registerComponent('vive-controls', {
   checkIfControllerPresent: function () {
     var data = this.data;
     var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
-    var isPresent = isControllerPresent(GAMEPAD_ID_PREFIX, { index: controller });
-
+    var isPresent = this.isControllerPresent(this.el.sceneEl, GAMEPAD_ID_PREFIX, { index: controller });
     if (isPresent === this.controllerPresent) { return; }
-
     this.controllerPresent = isPresent;
     if (isPresent) {
       this.injectTrackedControls(); // inject track-controls
@@ -67663,22 +67663,22 @@ module.exports.getGamepadsByPrefix = function (idPrefix) {
 /**
  * Enumerate controllers (as built by system tick, e.g. that have pose) and check if they match parameters.
  *
+ * @param {object} sceneEl - the scene element.
  * @param {object} idPrefix - prefix to match in gamepad id, if any.
  * @param {object} queryObject - map of values to match (hand; index among controllers with idPrefix)
  */
-module.exports.isControllerPresent = function (idPrefix, queryObject) {
+module.exports.isControllerPresent = function (sceneEl, idPrefix, queryObject) {
   var isPresent = false;
   var index = 0;
   var gamepad;
   var isPrefixMatch;
-  var sceneEl = document.querySelector('a-scene');
   var gamepads;
-  if (!sceneEl || !sceneEl.systems['tracked-controls']) { return isPresent; }
-
-  gamepads = sceneEl.systems['tracked-controls'].controllers;
+  var trackedControlsSystem = sceneEl && sceneEl.systems['tracked-controls'];
+  if (!trackedControlsSystem) { return isPresent; }
+  gamepads = trackedControlsSystem.controllers;
   if (!gamepads || gamepads.length === 0) {
-    sceneEl.systems['tracked-controls'].updateControllerList();
-    gamepads = sceneEl.systems['tracked-controls'].controllers;
+    trackedControlsSystem.updateControllerList();
+    gamepads = trackedControlsSystem.controllers;
   }
   if (!gamepads) { return isPresent; }
 

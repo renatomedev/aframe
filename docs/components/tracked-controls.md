@@ -9,10 +9,12 @@ parent_section: components
 [oculustouchcontrols]: ./oculus-touch-controls.md
 [vivecontrols]: ./vive-controls.md
 
-The tracked-controls component interfaces with tracked controllers. 
-It uses the Gamepad API to handle tracked controllers, 
-and is abstracted by the [hand-controls component][handcontrols] as well as the [vive-controls][vivecontrols] & [oculus-touch-controls][oculustouchcontrols] components.
-This component elects the appropriate controller, applies pose to the entity, observes buttons state and emits appropriate events.
+The tracked-controls component interfaces with tracked controllers.
+tracked-controls uses the Gamepad API to handle tracked controllers, and is
+abstracted by the [hand-controls component][handcontrols] as well as the
+[vive-controls][vivecontrols] and [oculus-touch-controls][oculustouchcontrols]
+components. This component elects the appropriate controller, applies pose to
+the entity, observes buttons state and emits appropriate events.
 
 ## Example
 

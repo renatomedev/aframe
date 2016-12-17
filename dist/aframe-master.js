@@ -58742,12 +58742,16 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
 
   onGamepadConnected: function (evt) {
+    // for now, don't disable controller update listening, due to
+    // apparent issue with FF Nightly only sending one event and seeing one controller;
     // this.everGotGamepadEvent = true;
     // this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
+    // for now, don't disable controller update listening, due to
+    // apparent issue with FF Nightly only sending one event and seeing one controller;
     // this.everGotGamepadEvent = true;
     // this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
@@ -59334,8 +59338,18 @@ var bind = _dereq_('../../utils/bind');
 var pkg = _dereq_('../../../package');
 var registerComponent = _dereq_('../../core/component').registerComponent;
 
+/**
+ * 0.4.2 to 0.4.x
+ * Will need to update this when A-Frame goes to 1.x.x.
+ */
+function getFuzzyPatchVersion (version) {
+  var split = version.split('.');
+  split[2] = 'x';
+  return split.join('.');
+}
+
 var INSPECTOR_DEV_URL = 'https://aframe.io/aframe-inspector/dist/aframe-inspector.js';
-var INSPECTOR_RELEASE_URL = pkg.homepage + 'releases/' + pkg.version + '/aframe-inspector.min.js';
+var INSPECTOR_RELEASE_URL = 'https://unpkg.com/aframe-inspector@' + getFuzzyPatchVersion(pkg.version) + '/dist/aframe-inspector.min.js';
 var INSPECTOR_URL = "dev" === 'dev' ? INSPECTOR_DEV_URL : INSPECTOR_RELEASE_URL;
 var LOADING_MESSAGE = 'Loading Inspector';
 
@@ -60562,12 +60576,16 @@ module.exports.Component = registerComponent('vive-controls', {
   },
 
   onGamepadConnected: function (evt) {
+    // for now, don't disable controller update listening, due to
+    // apparent issue with FF Nightly only sending one event and seeing one controller;
     // this.everGotGamepadEvent = true;
     // this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
+    // for now, don't disable controller update listening, due to
+    // apparent issue with FF Nightly only sending one event and seeing one controller;
     // this.everGotGamepadEvent = true;
     // this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
@@ -64999,6 +65017,8 @@ Object.keys(shaders.standard.schema).forEach(addMapping);
 function addMapping (prop) {
   // To hyphenated.
   var htmlAttrName = prop.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+  if (prop === 'fog') { htmlAttrName = 'material-fog'; }
+  if (prop === 'visible') { htmlAttrName = 'material-visible'; }
   materialMappings[htmlAttrName] = 'material.' + prop;
 }
 

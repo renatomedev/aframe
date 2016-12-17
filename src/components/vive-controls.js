@@ -97,12 +97,16 @@ module.exports.Component = registerComponent('vive-controls', {
   },
 
   onGamepadConnected: function (evt) {
+    // for now, don't disable controller update listening, due to
+    // apparent issue with FF Nightly only sending one event and seeing one controller;
     // this.everGotGamepadEvent = true;
     // this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
+    // for now, don't disable controller update listening, due to
+    // apparent issue with FF Nightly only sending one event and seeing one controller;
     // this.everGotGamepadEvent = true;
     // this.removeControllersUpdateListener();
     this.checkIfControllerPresent();

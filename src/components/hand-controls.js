@@ -187,12 +187,12 @@ module.exports.Component = registerComponent('hand-controls', {
   },
 
   animateGesture: function (gesture) {
+    var isVive = this.isViveController();
     if (!gesture) {
-      this.playAnimation('touch', true);
+      this.playAnimation('touch', !isVive);
       return;
     }
     var animation = this.gestureAnimationMapping[gesture];
-    var isVive = this.isViveController();
     this.playAnimation(animation || 'touch', !animation && !isVive);
   },
 

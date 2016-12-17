@@ -57737,6 +57737,12 @@ module.exports.Component = registerComponent('hand-controls', {
     this.emitGestureEvents(this.gesture, lastGesture);
   },
 
+  isViveController: function () {
+    var trackedControls = this.el.components['tracked-controls'];
+    var controllerId = trackedControls && trackedControls.controller && trackedControls.controller.id;
+    return controllerId === 'OpenVR Gamepad';
+  },
+
   determineGesture: function () {
     var gesture;
     var isGripActive = this.pressedButtons['grip'];
@@ -57744,14 +57750,18 @@ module.exports.Component = registerComponent('hand-controls', {
     var isTrackpadActive = this.pressedButtons['trackpad'] || this.touchedButtons['trackpad'];
     var isTriggerActive = this.pressedButtons['trigger'] || this.touchedButtons['trigger'];
     var isABXYActive = this.touchedButtons['AorX'] || this.touchedButtons['BorY'];
+    var isVive = this.isViveController();
+    // this works well with Oculus Touch, but Vive needs tweaks
     if (isGripActive) {
+      if (isVive) { gesture = 'fist'; } else
       if (isSurfaceActive || isABXYActive || isTrackpadActive) {
         gesture = isTriggerActive ? 'fist' : 'pointing';
       } else {
         gesture = isTriggerActive ? 'thumb' : 'pistol';
       }
     } else
-    if (isTriggerActive) { gesture = 'touch'; } // else no gesture
+    if (isTriggerActive) { gesture = isVive ? 'fist' : 'touch'; } else
+    if (isVive && isTrackpadActive) { gesture = 'pointing'; }
     return gesture;
   },
 
@@ -57764,12 +57774,13 @@ module.exports.Component = registerComponent('hand-controls', {
   },
 
   animateGesture: function (gesture) {
+    var isVive = this.isViveController();
     if (!gesture) {
-      this.playAnimation('touch', true);
+      this.playAnimation('touch', !isVive);
       return;
     }
     var animation = this.gestureAnimationMapping[gesture];
-    this.playAnimation(animation || 'touch', !animation);
+    this.playAnimation(animation || 'touch', !animation && !isVive);
   },
 
   // map to old vive-specific event names for now
@@ -59095,43 +59106,51 @@ var registerComponent = _dereq_('../../core/component').registerComponent;
 var utils = _dereq_('../../utils');
 
 /**
- * Automatically enter VR, either upon vrdisplayactivate or immediately if possible.
+ * Automatically enter VR, either upon vrdisplayactivate (e.g. putting on Rift headset)
+ * or immediately (if possible) if display name contains data string.
+ * The default data string is 'GearVR' for Carmel browser which only does VR.
  */
 module.exports.Component = registerComponent('auto-enter-vr', {
   schema: {default: 'GearVR'},
 
   init: function () {
     var scene = this.el;
+    var self = this;
 
-    if (utils.getUrlParameter('auto-enter-vr') === 'false') { return; }
-
-    window.addEventListener('vrdisplayactivate', function () {
-      scene.enterVR();
-    }, false);
-
-    window.addEventListener('vrdisplaydeactivate', function () {
-      scene.exitVR();
-    }, false);
-
+    // define methods to allow mock testing
+    this.enterVR = scene.enterVR.bind(scene);
+    this.exitVR = scene.exitVR.bind(scene);
     this.shouldAutoEnterVR = this.shouldAutoEnterVR.bind(this);
 
-    // just try to enter... turns out we need to wait for next tick
-    var self = this;
-    setTimeout(function () { if (self.shouldAutoEnterVR()) { scene.enterVR(); } }, 0);
+    // don't do anything if false
+    if (utils.getUrlParameter('auto-enter-vr') === 'false') { return; }
+
+    // enter VR on vrdisplayactivate (e.g. putting on Rift headset)
+    window.addEventListener('vrdisplayactivate', function () { this.enterVR(); }, false);
+
+    // exit VR on vrdisplaydeactivate (e.g. taking off Rift headset)
+    window.addEventListener('vrdisplaydeactivate', function () { this.exitVR(); }, false);
+
+    // check if we should try to enter VR... turns out we need to wait for next tick
+    setTimeout(function () { if (self.shouldAutoEnterVR()) { this.enterVR(); } }, 0);
   },
 
   update: function () {
-    return this.shouldAutoEnterVR() ? this.el.enterVR() : this.el.exitVR();
+    return this.shouldAutoEnterVR() ? this.enterVR() : this.exitVR();
   },
 
   shouldAutoEnterVR: function () {
     var scene = this.el;
     var data = this.data;
-    if (data === false || data === 'false') { return false; }
+    // if false, we should not auto-enter VR
+    if (data === 'false') { return false; }
+    // if we have a data string to match against display name, try and get it;
+    // if we can't get display name, or it doesn't match, we should not auto-enter VR
     if (typeof data === 'string') {
       var display = scene.effect && scene.effect.getVRDisplay && scene.effect.getVRDisplay();
       if (!display || !display.displayName || display.displayName.indexOf(data) < 0) { return false; }
     }
+    // we should auto-enter VR
     return true;
   }
 });

@@ -56932,7 +56932,7 @@ module.exports={
     "prerelease": "npm run dist && node scripts/release.js 0.3.2 0.4.0",
     "start": "npm run dev",
     "test": "karma start ./tests/karma.conf.js",
-    "test:docs": "node scripts/docs-link-check.js",
+    "test:docs": "node scripts/docs-lint.js",
     "test:firefox": "karma start ./tests/karma.conf.js --browsers Firefox",
     "test:chrome": "karma start ./tests/karma.conf.js --browsers Chrome",
     "test:ci": "TEST_ENV=ci karma start ./tests/karma.conf.js --single-run --browsers Firefox"
@@ -56959,6 +56959,7 @@ module.exports={
     "budo": "^9.2.0",
     "chai": "^3.5.0",
     "chai-shallow-deep-equal": "^1.4.0",
+    "chalk": "^1.1.3",
     "codecov": "^1.0.1",
     "cross-env": "^3.1.3",
     "envify": "^3.4.1",
@@ -56990,7 +56991,9 @@ module.exports={
     "sinon": "^1.17.5",
     "sinon-chai": "^2.8.0",
     "snazzy": "^5.0.0",
-    "uglifyjs": "^2.4.10"
+    "too-wordy": "ngokevin/too-wordy",
+    "uglifyjs": "^2.4.10",
+    "write-good": "^0.9.1"
   },
   "link": true,
   "browserify": {
@@ -58739,14 +58742,14 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
 
   onGamepadConnected: function (evt) {
-    this.everGotGamepadEvent = true;
-    this.removeControllersUpdateListener();
+    // this.everGotGamepadEvent = true;
+    // this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
-    this.everGotGamepadEvent = true;
-    this.removeControllersUpdateListener();
+    // this.everGotGamepadEvent = true;
+    // this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
@@ -58792,11 +58795,11 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
 
   addControllersUpdateListener: function () {
-    this.el.sceneEl.addEventListener('controllersupdate', this.onControllersUpdate, false);
+    this.el.sceneEl.addEventListener('controllersupdated', this.onControllersUpdate, false);
   },
 
   removeControllersUpdateListener: function () {
-    this.el.sceneEl.removeEventListener('controllersupdate', this.onControllersUpdate, false);
+    this.el.sceneEl.removeEventListener('controllersupdated', this.onControllersUpdate, false);
   },
 
   onControllersUpdate: function () {
@@ -59111,7 +59114,10 @@ var utils = _dereq_('../../utils');
  * The default data string is 'GearVR' for Carmel browser which only does VR.
  */
 module.exports.Component = registerComponent('auto-enter-vr', {
-  schema: {default: 'GearVR'},
+  schema: {
+    display: {type: 'string', default: 'GearVR'},
+    enabled: {type: 'boolean', default: true}
+  },
 
   init: function () {
     var scene = this.el;
@@ -59143,12 +59149,12 @@ module.exports.Component = registerComponent('auto-enter-vr', {
     var scene = this.el;
     var data = this.data;
     // if false, we should not auto-enter VR
-    if (data === 'false') { return false; }
+    if (!data.enabled) { return false; }
     // if we have a data string to match against display name, try and get it;
     // if we can't get display name, or it doesn't match, we should not auto-enter VR
-    if (typeof data === 'string') {
+    if (data.display) {
       var display = scene.effect && scene.effect.getVRDisplay && scene.effect.getVRDisplay();
-      if (!display || !display.displayName || display.displayName.indexOf(data) < 0) { return false; }
+      if (!display || !display.displayName || display.displayName.indexOf(data.display) < 0) { return false; }
     }
     // we should auto-enter VR
     return true;
@@ -59466,7 +59472,7 @@ var warn = debug('components:pool:warn');
  * in a game where you want to reuse enemies entities.
  *
  * @member {array} availableEls - Available entities in the pool.
- * @member {array} useedEls - Entities of the pool in use.
+ * @member {array} usedEls - Entities of the pool in use.
  *
  */
 module.exports.Component = registerComponent('pool', {
@@ -60556,14 +60562,14 @@ module.exports.Component = registerComponent('vive-controls', {
   },
 
   onGamepadConnected: function (evt) {
-    this.everGotGamepadEvent = true;
-    this.removeControllersUpdateListener();
+    // this.everGotGamepadEvent = true;
+    // this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
-    this.everGotGamepadEvent = true;
-    this.removeControllersUpdateListener();
+    // this.everGotGamepadEvent = true;
+    // this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
@@ -60597,11 +60603,11 @@ module.exports.Component = registerComponent('vive-controls', {
   },
 
   addControllersUpdateListener: function () {
-    this.el.sceneEl.addEventListener('controllersupdate', this.onControllersUpdate, false);
+    this.el.sceneEl.addEventListener('controllersupdated', this.onControllersUpdate, false);
   },
 
   removeControllersUpdateListener: function () {
-    this.el.sceneEl.removeEventListener('controllersupdate', this.onControllersUpdate, false);
+    this.el.sceneEl.removeEventListener('controllersupdated', this.onControllersUpdate, false);
   },
 
   onControllersUpdate: function () {
@@ -60872,7 +60878,6 @@ module.exports.Component = registerComponent('wasd-controls', {
 
   onKeyUp: function (event) {
     var code;
-    if (!shouldCaptureKeyEvent(event)) { return; }
     code = event.code || KEYCODE_TO_CODE[event.keyCode];
     this.keys[code] = false;
   }
@@ -65020,6 +65025,7 @@ _dereq_('./primitives/meshPrimitives');
 
 },{"./primitives/a-camera":78,"./primitives/a-collada-model":79,"./primitives/a-cursor":80,"./primitives/a-curvedimage":81,"./primitives/a-image":82,"./primitives/a-light":83,"./primitives/a-obj-model":84,"./primitives/a-sky":85,"./primitives/a-sound":86,"./primitives/a-video":87,"./primitives/a-videosphere":88,"./primitives/meshPrimitives":89}],77:[function(_dereq_,module,exports){
 var AEntity = _dereq_('../../core/a-entity');
+var components = _dereq_('../../core/component').components;
 var registerElement = _dereq_('../../core/a-register-element').registerElement;
 var utils = _dereq_('../../utils/');
 
@@ -65051,6 +65057,29 @@ module.exports.registerPrimitive = function registerPrimitive (name, definition)
       createdCallback: {
         value: function () {
           if (definition.deprecated) { console.warn(definition.deprecated); }
+          this.resolveMappingCollisions();
+        }
+      },
+
+      /**
+       * If a mapping collides with a registered component name
+       * it renames the mapping to componentname-property
+       */
+      resolveMappingCollisions: {
+        value: function () {
+          var mappings = this.mappings;
+          var self = this;
+          Object.keys(mappings).forEach(function resolveCollision (key) {
+            var newAttribute;
+            if (components[key]) {
+              newAttribute = mappings[key].replace('.', '-');
+              mappings[newAttribute] = mappings[key];
+              delete mappings[key];
+              console.warn('The primitive ' + self.tagName.toLowerCase() + ' has a mapping collision. ' +
+                           'The attribute ' + key + ' has the same name as a registered component and' +
+                           ' has been renamed to ' + newAttribute);
+            }
+          });
         }
       },
 
@@ -65125,7 +65154,7 @@ module.exports.registerPrimitive = function registerPrimitive (name, definition)
   return primitive;
 };
 
-},{"../../core/a-entity":59,"../../core/a-register-element":62,"../../utils/":124}],78:[function(_dereq_,module,exports){
+},{"../../core/a-entity":59,"../../core/a-register-element":62,"../../core/component":63,"../../utils/":124}],78:[function(_dereq_,module,exports){
 var DEFAULT_CAMERA_HEIGHT = _dereq_('../../../constants/').DEFAULT_CAMERA_HEIGHT;
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 
@@ -66546,7 +66575,7 @@ module.exports.System = registerSystem('material', {
     // Video element.
     if (src.tagName === 'VIDEO') {
       if (!src.hasAttribute('src') && !src.hasAttribute('srcObject')) {
-        warn('video element has neither src nor srcObject');
+        warn('Video element was defined without `src` nor `srcObject` attributes.');
       }
       this.loadVideo(src, data, cb);
       return;
@@ -67313,9 +67342,7 @@ module.exports.diff = function (a, b) {
  * @returns {Boolean} Whether the key event should be captured.
  */
 module.exports.shouldCaptureKeyEvent = function (event) {
-  if (event.shiftKey || event.metaKey || event.altKey || event.ctrlKey) {
-    return false;
-  }
+  if (event.metaKey) { return false; }
   return document.activeElement === document.body;
 };
 

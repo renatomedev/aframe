@@ -97,14 +97,14 @@ module.exports.Component = registerComponent('vive-controls', {
   },
 
   onGamepadConnected: function (evt) {
-    this.everGotGamepadEvent = true;
-    this.removeControllersUpdateListener();
+    // this.everGotGamepadEvent = true;
+    // this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
   onGamepadDisconnected: function (evt) {
-    this.everGotGamepadEvent = true;
-    this.removeControllersUpdateListener();
+    // this.everGotGamepadEvent = true;
+    // this.removeControllersUpdateListener();
     this.checkIfControllerPresent();
   },
 
@@ -138,11 +138,11 @@ module.exports.Component = registerComponent('vive-controls', {
   },
 
   addControllersUpdateListener: function () {
-    this.el.sceneEl.addEventListener('controllersupdate', this.onControllersUpdate, false);
+    this.el.sceneEl.addEventListener('controllersupdated', this.onControllersUpdate, false);
   },
 
   removeControllersUpdateListener: function () {
-    this.el.sceneEl.removeEventListener('controllersupdate', this.onControllersUpdate, false);
+    this.el.sceneEl.removeEventListener('controllersupdated', this.onControllersUpdate, false);
   },
 
   onControllersUpdate: function () {

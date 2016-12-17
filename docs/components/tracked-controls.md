@@ -14,7 +14,6 @@ It uses the Gamepad API to handle tracked controllers,
 and is abstracted by the [hand-controls component][handcontrols] as well as the [vive-controls][vivecontrols] & [oculus-touch-controls][oculustouchcontrols] components.
 This component elects the appropriate controller, applies pose to the entity, observes buttons state and emits appropriate events.
 
-
 ## Example
 
 ```html
@@ -23,10 +22,10 @@ This component elects the appropriate controller, applies pose to the entity, ob
 
 ## Value
 
-| Property    | Description                                                    | Default Value    |
-|-------------|----------------------------------------------------------------|------------------|
-| controller  | Index of the controller in array returned by the Gamepad API.  | 0                |
-| id          | Selects the controller returned by the Gamepad API.            | OpenVR Gamepad   |
+| Property    | Description                                                    | Default Value          |
+|-------------|----------------------------------------------------------------|------------------------|
+| controller  | Index of the controller in array returned by the Gamepad API.  | 0                      |
+| id          | Selects the controller returned by the Gamepad API.            | Match none by default! |
 
 ## Events
 
@@ -39,10 +38,10 @@ This component elects the appropriate controller, applies pose to the entity, ob
 | touchstart     | Touch sensitive button touched.            |
 | touchend       | Touch sensitive button released.           |
 
-### Additional Resources
-
-- [Gamepad API][gamepadAPI] - W3C Gamepad API
-- [OpenVR][openVR] - OpenVR Documentation
+### More Resources
 
 [gamepadAPI]: https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API
 [openVR]: https://github.com/ValveSoftware/openvr/wiki/API-Documentation
+
+- [Gamepad API][gamepadAPI] - W3C Gamepad API
+- [OpenVR][openVR] - OpenVR Documentation

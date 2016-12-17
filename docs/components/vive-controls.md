@@ -48,3 +48,4 @@ buttons (trigger, grip, menu, system) and trackpad.
 
 - [Controller OBJ](https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj)
 - [Controller MTL](https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl)
+

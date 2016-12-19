@@ -23,6 +23,8 @@ var EMULATED_TOUCH_THRESHOLD = 0.001;
  * It loads a controller model and highlights the pressed buttons
  */
 module.exports.Component = registerComponent('oculus-touch-controls', {
+  dependencies: ['tracked-controls'],
+
   schema: {
     hand: {default: 'left'},
     buttonColor: {default: '#FAFAFA'},          // Off-white.

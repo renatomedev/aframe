@@ -58503,10 +58503,10 @@ module.exports.Component = registerComponent('hand-controls', {
     this.emitGestureEvents(this.gesture, lastGesture);
   },
 
-  isViveController: function () {
+  isOculusTouchController: function () {
     var trackedControls = this.el.components['tracked-controls'];
     var controllerId = trackedControls && trackedControls.controller && trackedControls.controller.id;
-    return controllerId === 'OpenVR Gamepad';
+    return controllerId && controllerId.indexOf('Oculus Touch') === 0;
   },
 
   determineGesture: function () {
@@ -58516,18 +58516,22 @@ module.exports.Component = registerComponent('hand-controls', {
     var isTrackpadActive = this.pressedButtons['trackpad'] || this.touchedButtons['trackpad'];
     var isTriggerActive = this.pressedButtons['trigger'] || this.touchedButtons['trigger'];
     var isABXYActive = this.touchedButtons['AorX'] || this.touchedButtons['BorY'];
-    var isVive = this.isViveController();
-    // this works well with Oculus Touch, but Vive needs tweaks
+    var isOculusTouch = this.isOculusTouchController();
+      // this works well with Oculus Touch, but Vive needs tweaks
     if (isGripActive) {
-      if (isVive) { gesture = 'fist'; } else
+      if (!isOculusTouch) {
+        gesture = 'fist';
+      } else
       if (isSurfaceActive || isABXYActive || isTrackpadActive) {
         gesture = isTriggerActive ? 'fist' : 'pointing';
       } else {
         gesture = isTriggerActive ? 'thumb' : 'pistol';
       }
     } else
-    if (isTriggerActive) { gesture = isVive ? 'fist' : 'touch'; } else
-    if (isVive && isTrackpadActive) { gesture = 'pointing'; }
+    if (isTriggerActive) {
+      gesture = isOculusTouch ? 'touch' : 'fist';
+    } else
+    if (!isOculusTouch && isTrackpadActive) { gesture = 'pointing'; }
     return gesture;
   },
 
@@ -58540,13 +58544,13 @@ module.exports.Component = registerComponent('hand-controls', {
   },
 
   animateGesture: function (gesture) {
-    var isVive = this.isViveController();
+    var isOculusTouch = this.isOculusTouchController();
     if (!gesture) {
-      this.playAnimation('touch', !isVive);
+      this.playAnimation('touch', isOculusTouch);
       return;
     }
     var animation = this.gestureAnimationMapping[gesture];
-    this.playAnimation(animation || 'touch', !animation && !isVive);
+    this.playAnimation(animation || 'touch', !animation && isOculusTouch);
   },
 
   // map to old vive-specific event names for now
@@ -61120,7 +61124,7 @@ module.exports.Component = registerComponent('tracked-controls', {
     var buttonStates = this.buttonStates;
     var evtName;
     var previousButtonState = buttonStates[id] = buttonStates[id] || {};
-    if (buttonState.pressed === previousButtonState.pressed) { return; }
+    if (buttonState.pressed === previousButtonState.pressed) { return false; }
     if (buttonState.pressed) {
       evtName = 'down';
     } else {
@@ -61128,6 +61132,8 @@ module.exports.Component = registerComponent('tracked-controls', {
     }
     this.el.emit('button' + evtName, {id: id});
     previousButtonState.pressed = buttonState.pressed;
+    // return true so handleButton knows something changed
+    return true;
   },
 
   handleTouch: function (id, buttonState) {
@@ -61144,6 +61150,7 @@ module.exports.Component = registerComponent('tracked-controls', {
     }
     previousButtonState.touched = buttonState.touched;
     this.el.emit('touch' + evtName, {id: id, state: previousButtonState});
+    // return true so handleButton knows something changed
     return true;
   },
 
@@ -61152,6 +61159,7 @@ module.exports.Component = registerComponent('tracked-controls', {
     var previousButtonState = buttonStates[id] = buttonStates[id] || {};
     if (buttonState.value === previousButtonState.value) { return false; }
     previousButtonState.value = buttonState.value;
+    // return true so handleButton knows something changed
     return true;
   }
 });

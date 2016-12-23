@@ -130,7 +130,7 @@ module.exports.Component = registerComponent('tracked-controls', {
     var buttonStates = this.buttonStates;
     var evtName;
     var previousButtonState = buttonStates[id] = buttonStates[id] || {};
-    if (buttonState.pressed === previousButtonState.pressed) { return; }
+    if (buttonState.pressed === previousButtonState.pressed) { return false; }
     if (buttonState.pressed) {
       evtName = 'down';
     } else {
@@ -138,6 +138,8 @@ module.exports.Component = registerComponent('tracked-controls', {
     }
     this.el.emit('button' + evtName, {id: id});
     previousButtonState.pressed = buttonState.pressed;
+    // return true so handleButton knows something changed
+    return true;
   },
 
   handleTouch: function (id, buttonState) {
@@ -154,6 +156,7 @@ module.exports.Component = registerComponent('tracked-controls', {
     }
     previousButtonState.touched = buttonState.touched;
     this.el.emit('touch' + evtName, {id: id, state: previousButtonState});
+    // return true so handleButton knows something changed
     return true;
   },
 
@@ -162,6 +165,7 @@ module.exports.Component = registerComponent('tracked-controls', {
     var previousButtonState = buttonStates[id] = buttonStates[id] || {};
     if (buttonState.value === previousButtonState.value) { return false; }
     previousButtonState.value = buttonState.value;
+    // return true so handleButton knows something changed
     return true;
   }
 });

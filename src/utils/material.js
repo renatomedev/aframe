@@ -19,9 +19,11 @@ module.exports.updateMap = function (shader, data) {
 
   // Texture removed.
   if (!material.map) { return; }
+  shader.textureSrc = null;
   setMap(null);
 
   function setMap (texture) {
+    if (shader.textureSrc !== src) { return; }
     material.map = texture;
     material.needsUpdate = true;
     handleTextureEvents(el, texture);

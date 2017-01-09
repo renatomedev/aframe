@@ -7,11 +7,11 @@ var error = debug('components:texture:error');
 var TextureLoader = new THREE.TextureLoader();
 var warn = debug('components:texture:warn');
 
-var MIN_UPDATE_MS = 1000.0 / 30;
+// var MIN_UPDATE_MS = 1000.0 / 30;
 
-function textureCacheEntryNeedsUpdate (t) {
-  t.texture.needsUpdate = true;
-}
+// function textureCacheEntryNeedsUpdate (t) {
+//   t.texture.needsUpdate = true;
+// }
 
 /**
  * System for material component.
@@ -26,7 +26,7 @@ module.exports.System = registerSystem('material', {
   init: function () {
     this.materials = {};
     this.textureCache = {};
-    this.tick = utils.throttleTick(this.throttledTick, MIN_UPDATE_MS, this);
+    this.tick = this.throttledTick; // utils.throttleTick(this.throttledTick, MIN_UPDATE_MS, this);
     this.videoTextureCache = {};
   },
 
@@ -38,15 +38,16 @@ module.exports.System = registerSystem('material', {
   updateVideoTextureCache: function () {
     var textureCache = this.videoTextureCache;
     if (!textureCache) { return; }
+/*
     var lastTime = this.lastUpdateTextureCache || 0;
     var now = Date.now();
     var tooSoon = (now - lastTime < MIN_UPDATE_MS);
     if (tooSoon) { return; }
     this.lastUpdateTextureCache = now;
+*/
     var keys = Object.keys(textureCache);
     for (var i = 0; i < keys.length; i++) {
-      // Would this be faster if not a promise?
-      textureCache[keys[i]].then(textureCacheEntryNeedsUpdate);
+      textureCache[keys[i]].needsUpdate = true;
     }
   },
 
@@ -136,10 +137,12 @@ module.exports.System = registerSystem('material', {
     var hash;
     var texture;
     var textureCache = this.textureCache;
+    var videoTextureCache = this.videoTextureCache;
     var videoEl;
     var videoTextureResult;
 
     function handleVideoTextureLoaded (result) {
+      videoTextureCache[result.hash] = result.texture;
       result.texture.needsUpdate = true;
       cb(result.texture, result.videoEl);
     }
@@ -175,7 +178,7 @@ module.exports.System = registerSystem('material', {
     texture.needsUpdate = true;
 
     // Cache as promise to be consistent with image texture caching.
-    videoTextureResult = {texture: texture, videoEl: videoEl};
+    videoTextureResult = {texture: texture, videoEl: videoEl, hash: hash};
     textureCache[hash] = Promise.resolve(videoTextureResult);
     handleVideoTextureLoaded(videoTextureResult);
   },

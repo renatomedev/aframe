@@ -7,6 +7,12 @@ var error = debug('components:texture:error');
 var TextureLoader = new THREE.TextureLoader();
 var warn = debug('components:texture:warn');
 
+var MIN_UPDATE_MS = 1000.0 / 30;
+
+function textureCacheEntryNeedsUpdate (t) {
+  t.texture.needsUpdate = true;
+}
+
 /**
  * System for material component.
  * Handle material registration, updates (for fog), and texture caching.
@@ -20,10 +26,33 @@ module.exports.System = registerSystem('material', {
   init: function () {
     this.materials = {};
     this.textureCache = {};
+    this.tick = utils.throttleTick(this.throttledTick, MIN_UPDATE_MS, this);
+    this.videoTextureCache = {};
+  },
+
+  throttledTick: function () {
+    // iterate over texture cache, and for video elements set needsUpdate to true.
+    this.updateVideoTextureCache();
+  },
+
+  updateVideoTextureCache: function () {
+    var textureCache = this.videoTextureCache;
+    if (!textureCache) { return; }
+    var lastTime = this.lastUpdateTextureCache || 0;
+    var now = Date.now();
+    var tooSoon = (now - lastTime < MIN_UPDATE_MS);
+    if (tooSoon) { return; }
+    this.lastUpdateTextureCache = now;
+    var keys = Object.keys(textureCache);
+    for (var i = 0; i < keys.length; i++) {
+      // Would this be faster if not a promise?
+      textureCache[keys[i]].then(textureCacheEntryNeedsUpdate);
+    }
   },
 
   clearTextureCache: function () {
     this.textureCache = {};
+    this.videoTextureCache = {};
   },
 
   /**
@@ -139,9 +168,11 @@ module.exports.System = registerSystem('material', {
     }
 
     // Create new video texture.
-    texture = new THREE.VideoTexture(videoEl);
+    texture = new THREE.Texture(videoEl);
+    texture.generateMipmaps = false;
     texture.minFilter = THREE.LinearFilter;
     setTextureProperties(texture, data);
+    texture.needsUpdate = true;
 
     // Cache as promise to be consistent with image texture caching.
     videoTextureResult = {texture: texture, videoEl: videoEl};

@@ -7,11 +7,7 @@ var error = debug('components:texture:error');
 var TextureLoader = new THREE.TextureLoader();
 var warn = debug('components:texture:warn');
 
-// var MIN_UPDATE_MS = 1000.0 / 30;
-
-// function textureCacheEntryNeedsUpdate (t) {
-//   t.texture.needsUpdate = true;
-// }
+var MIN_UPDATE_MS = 16; // for 60 fps
 
 /**
  * System for material component.
@@ -38,16 +34,16 @@ module.exports.System = registerSystem('material', {
   updateVideoTextureCache: function () {
     var textureCache = this.videoTextureCache;
     if (!textureCache) { return; }
-/*
-    var lastTime = this.lastUpdateTextureCache || 0;
     var now = Date.now();
-    var tooSoon = (now - lastTime < MIN_UPDATE_MS);
-    if (tooSoon) { return; }
-    this.lastUpdateTextureCache = now;
-*/
+    var tooSoon = now - MIN_UPDATE_MS;
     var keys = Object.keys(textureCache);
     for (var i = 0; i < keys.length; i++) {
-      textureCache[keys[i]].needsUpdate = true;
+      var cacheEntry = textureCache[keys[i]];
+      // check to see if it's too soon to update this texture
+      // TODO: consider different update rates for tagnames and/or specific instances
+      if (cacheEntry.lastUpdate && cacheEntry.lastUpdate > tooSoon) { continue; }
+      cacheEntry.lastUpdate = now;
+      cacheEntry.texture.needsUpdate = true;
     }
   },
 
@@ -142,7 +138,7 @@ module.exports.System = registerSystem('material', {
     var videoTextureResult;
 
     function handleVideoTextureLoaded (result) {
-      videoTextureCache[result.hash] = result.texture;
+      videoTextureCache[result.hash] = {texture: result.texture, videoEl: result.videoEl};
       result.texture.needsUpdate = true;
       cb(result.texture, result.videoEl);
     }

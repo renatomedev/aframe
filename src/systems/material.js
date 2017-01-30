@@ -31,11 +31,13 @@ module.exports.System = registerSystem('material', {
     this.updateVideoTextureCache();
   },
 
+  minVideoTextureUpdateMsec: MIN_UPDATE_MS,
+
   updateVideoTextureCache: function () {
     var textureCache = this.videoTextureCache;
     if (!textureCache) { return; }
     var now = Date.now();
-    var tooSoon = now - MIN_UPDATE_MS;
+    var tooSoon = now - this.minVideoTextureUpdateMsec;
     var keys = Object.keys(textureCache);
     for (var i = 0; i < keys.length; i++) {
       var cacheEntry = textureCache[keys[i]];

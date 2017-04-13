@@ -99,7 +99,7 @@ module.exports.Component = registerComponent('vive-tracker', {
   },
 
   onGamepadConnectionEvent: function (evt) {
-    this.everGotGamepadEvent = true;
+    // this.everGotGamepadEvent = true;
     // Due to an apparent bug in FF Nightly
     // where only one gamepadconnected / disconnected event is fired,
     // which makes it difficult to handle in individual controller entities,

@@ -1,17 +1,17 @@
 var registerComponent = require('../core/component').registerComponent;
 var bind = require('../utils/bind');
-var isControllerPresent = require('../utils/tracked-controls').isControllerPresent;
+var getGamepadsByPrefix = require('../utils/tracked-controls').getGamepadsByPrefix;
 
 var VIVE_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
 var VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
 
-var GAMEPAD_ID_PREFIX = 'OpenVR Tracker';
+var GAMEPAD_ID_PREFIX = 'OpenVR '; // should be OpenVR Tracker, but work around Nightly bug
 
 /**
- * Vive Controls Component
- * Interfaces with vive controllers and maps Gamepad events to
+ * Vive Tracker Component
+ * Interfaces with vive trackers and maps Gamepad events to
  * common controller buttons: trackpad, trigger, grip, menu and system
- * It loads a controller model and highlights the pressed buttons
+ * It loads a model and highlights the pressed buttons
  */
 module.exports.Component = registerComponent('vive-tracker', {
   schema: {
@@ -58,7 +58,7 @@ module.exports.Component = registerComponent('vive-tracker', {
     this.lastControllerCheck = 0;
     this.previousButtonValues = {};
     this.bindMethods();
-    this.isControllerPresent = isControllerPresent; // to allow mock
+    this.getGamepadsByPrefix = getGamepadsByPrefix; // to allow mock
   },
 
   addEventListeners: function () {
@@ -85,12 +85,19 @@ module.exports.Component = registerComponent('vive-tracker', {
 
   checkIfControllerPresent: function () {
     var data = this.data;
-    var controllerIndex = data.index;
-    var isPresent = this.isControllerPresent(this.el.sceneEl, GAMEPAD_ID_PREFIX, { index: controllerIndex });
+    var gamepads = this.getGamepadsByPrefix(GAMEPAD_ID_PREFIX);
+    var seenIndex = 0;
+    var controllerIndex = -1;
+    for (var i = 0; i < gamepads.length; i++) {
+      if (gamepads[i].hand) { continue; }
+      if (seenIndex === data.index) { controllerIndex = seenIndex; }
+      seenIndex++;
+    }
+    var isPresent = controllerIndex >= 0;
     if (isPresent === this.controllerPresent) { return; }
     this.controllerPresent = isPresent;
     if (isPresent) {
-      this.injectTrackedControls();
+      this.injectTrackedControls(controllerIndex);
       this.addEventListeners();
     } else { this.removeEventListeners(); }
   },
@@ -109,10 +116,9 @@ module.exports.Component = registerComponent('vive-tracker', {
     window.removeEventListener('gamepaddisconnected', this.checkIfControllerPresent, false);
   },
 
-  injectTrackedControls: function () {
+  injectTrackedControls: function (controller) {
     var el = this.el;
     var data = this.data;
-    var controller = data.index;
     el.setAttribute('tracked-controls', {idPrefix: GAMEPAD_ID_PREFIX, controller: controller, rotationOffset: data.rotationOffset});
     if (!this.data.model) { return; }
     this.el.setAttribute('obj-model', {

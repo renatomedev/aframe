@@ -1,12 +1,12 @@
 var registerComponent = require('../core/component').registerComponent;
 var bind = require('../utils/bind');
-var isControllerPresent = require('../utils/tracked-controls').isControllerPresent;
+var getGamepadsByPrefix = require('../utils/tracked-controls').getGamepadsByPrefix;
 var emitIfAxesChanged = require('../utils/tracked-controls').emitIfAxesChanged;
 
 var VIVE_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
 var VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
 
-var GAMEPAD_ID_PREFIX = 'OpenVR Gamepad';
+var GAMEPAD_ID_PREFIX = 'OpenVR ';
 
 /**
  * Vive Controls Component
@@ -59,7 +59,7 @@ module.exports.Component = registerComponent('vive-controls', {
     this.lastControllerCheck = 0;
     this.previousButtonValues = {};
     this.bindMethods();
-    this.isControllerPresent = isControllerPresent; // to allow mock
+    this.getGamepadsByPrefix = getGamepadsByPrefix; // to allow mock
     this.emitIfAxesChanged = emitIfAxesChanged; // to allow mock
   },
 
@@ -88,14 +88,16 @@ module.exports.Component = registerComponent('vive-controls', {
   checkIfControllerPresent: function () {
     var data = this.data;
     // Once OpenVR / SteamVR return correct hand data in the supporting browsers, we can use hand property.
-    // var isPresent = this.isControllerPresent(this.el.sceneEl, GAMEPAD_ID_PREFIX, { hand: data.hand });
-    // Until then, use hardcoded index.
-    var controllerIndex = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
-    var isPresent = this.isControllerPresent(this.el.sceneEl, GAMEPAD_ID_PREFIX, { index: controllerIndex });
+    var gamepads = this.getGamepadsByPrefix(GAMEPAD_ID_PREFIX);
+    var controllerIndex = -1;
+    for (var i = 0; i < gamepads.length; i++) {
+      if (gamepads[i].hand === data.hand) { controllerIndex = i; }
+    }
+    var isPresent = controllerIndex >= 0;
     if (isPresent === this.controllerPresent) { return; }
     this.controllerPresent = isPresent;
     if (isPresent) {
-      this.injectTrackedControls();
+      this.injectTrackedControls(controllerIndex);
       this.addEventListeners();
     } else { this.removeEventListeners(); }
   },
@@ -114,12 +116,9 @@ module.exports.Component = registerComponent('vive-controls', {
     window.removeEventListener('gamepaddisconnected', this.checkIfControllerPresent, false);
   },
 
-  injectTrackedControls: function () {
+  injectTrackedControls: function (controller) {
     var el = this.el;
     var data = this.data;
-    // handId: 0 - right, 1 - left, 2 - anything else...
-    var controller = data.hand === 'right' ? 0 : data.hand === 'left' ? 1 : 2;
-    // if we have an OpenVR Gamepad, use the fixed mapping
     el.setAttribute('tracked-controls', {idPrefix: GAMEPAD_ID_PREFIX, controller: controller, rotationOffset: data.rotationOffset});
     if (!this.data.model) { return; }
     this.el.setAttribute('obj-model', {

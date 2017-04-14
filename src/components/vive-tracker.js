@@ -1,7 +1,6 @@
 var registerComponent = require('../core/component').registerComponent;
 var bind = require('../utils/bind');
 var isControllerPresent = require('../utils/tracked-controls').isControllerPresent;
-var isEmulatedTouchEvent = require('../utils/tracked-controls').isEmulatedTouchEvent;
 
 var VIVE_CONTROLLER_MODEL_OBJ_URL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.obj';
 var VIVE_CONTROLLER_MODEL_OBJ_MTL = 'https://cdn.aframe.io/controllers/vive/vr_controller_vive.mtl';
@@ -44,7 +43,6 @@ module.exports.Component = registerComponent('vive-tracker', {
     this.checkIfControllerPresent = bind(this.checkIfControllerPresent, this);
     this.removeControllersUpdateListener = bind(this.removeControllersUpdateListener, this);
     this.onAxisMoved = bind(this.onAxisMoved, this);
-    this.onGamepadConnectionEvent = bind(this.onGamepadConnectionEvent, this);
   },
 
   init: function () {
@@ -57,7 +55,6 @@ module.exports.Component = registerComponent('vive-tracker', {
     this.onButtonTouchEnd = function (evt) { self.onButtonEvent(evt.detail.id, 'touchend'); };
     this.onAxisMoved = bind(this.onAxisMoved, this);
     this.controllerPresent = false;
-    this.everGotGamepadEvent = false;
     this.lastControllerCheck = 0;
     this.previousButtonValues = {};
     this.bindMethods();
@@ -98,34 +95,24 @@ module.exports.Component = registerComponent('vive-tracker', {
     } else { this.removeEventListeners(); }
   },
 
-  onGamepadConnectionEvent: function (evt) {
-    // this.everGotGamepadEvent = true;
-    // Due to an apparent bug in FF Nightly
-    // where only one gamepadconnected / disconnected event is fired,
-    // which makes it difficult to handle in individual controller entities,
-    // we no longer remove the controllersupdate listener as a result.
-    this.checkIfControllerPresent();
-  },
-
   play: function () {
     this.checkIfControllerPresent();
     this.addControllersUpdateListener();
-    window.addEventListener('gamepadconnected', this.onGamepadConnectionEvent, false);
-    window.addEventListener('gamepaddisconnected', this.onGamepadConnectionEvent, false);
+    // Note that due to gamepadconnected event propagation issues, we don't rely on events.
+    window.addEventListener('gamepaddisconnected', this.checkIfControllerPresent, false);
   },
 
   pause: function () {
     this.removeEventListeners();
     this.removeControllersUpdateListener();
-    window.removeEventListener('gamepadconnected', this.onGamepadConnectionEvent, false);
-    window.removeEventListener('gamepaddisconnected', this.onGamepadConnectionEvent, false);
+    // Note that due to gamepadconnected event propagation issues, we don't rely on events.
+    window.removeEventListener('gamepaddisconnected', this.checkIfControllerPresent, false);
   },
 
   injectTrackedControls: function () {
     var el = this.el;
     var data = this.data;
     var controller = data.index;
-    // if we have an OpenVR Gamepad, use the fixed mapping
     el.setAttribute('tracked-controls', {idPrefix: GAMEPAD_ID_PREFIX, controller: controller, rotationOffset: data.rotationOffset});
     if (!this.data.model) { return; }
     this.el.setAttribute('obj-model', {
@@ -142,30 +129,16 @@ module.exports.Component = registerComponent('vive-tracker', {
     this.el.sceneEl.removeEventListener('controllersupdated', this.onControllersUpdate, false);
   },
 
-  onControllersUpdate: function () {
-    if (!this.everGotGamepadEvent) { this.checkIfControllerPresent(); }
-  },
+  onControllersUpdate: function () { this.checkIfControllerPresent(); },
 
   onButtonChanged: function (evt) {
     var button = this.mapping.buttons[evt.detail.id];
     var buttonMeshes = this.buttonMeshes;
     var analogValue;
-    var isEmulatedTouch;
-    var isPreviousValueEmulatedTouch;
     if (!button) { return; }
 
     if (button === 'trigger') {
-      // At the moment, if trigger,
-      // touch events aren't happening;
-      // synthesize touch events from very low analog values.
       analogValue = evt.detail.state.value;
-      isPreviousValueEmulatedTouch = isEmulatedTouchEvent(this.previousButtonValues[button]);
-      this.previousButtonValues[button] = analogValue;
-      isEmulatedTouch = isEmulatedTouchEvent(analogValue);
-      if (isEmulatedTouch !== isPreviousValueEmulatedTouch) {
-        (isEmulatedTouch ? this.onButtonTouchStart : this.onButtonTouchEnd)(evt);
-      }
-
       // Update button mesh, if any.
       if (buttonMeshes && buttonMeshes.trigger) {
         buttonMeshes.trigger.rotation.x = -analogValue * (Math.PI / 12);

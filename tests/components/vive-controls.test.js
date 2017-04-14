@@ -8,7 +8,7 @@ suite(controllerComponentName, function () {
     el.setAttribute(controllerComponentName, '');
     el.addEventListener('loaded', function () {
       var controllerComponent = el.components[controllerComponentName];
-      controllerComponent.isControllerPresent = function () { return controllerComponent.isControllerPresentMockValue; };
+      controllerComponent.getGamepadsByPrefix = function () { return controllerComponent.isControllerPresentMockValue ? [{id: 'OpenVR Gamepad', index: 0, hand: 'left', pose: {}}] : []; };
       done();
     });
   });

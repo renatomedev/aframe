@@ -123,8 +123,13 @@ window.AFRAME.initialVRDisplayActivate = function (evt) {
   }
   if (window.AFRAME.initialActivatedVRDisplay) {
     console.log('A-Frame: initial vrdisplayactivate, remembered display');
+    // Create a dummy canvas for presentation.
+    var dummyCanvas = document.createElement('canvas');
+    dummyCanvas.id = 'dummyCanvas';
+    dummyCanvas.context = dummyCanvas.getContext('webgl');
+    document.body.appendChild(dummyCanvas);
     // Request presentation on the VRDisplay while we still have gesture permission.
-    window.AFRAME.initialActivatedVRDisplay.requestPresent([]).then(function () {
+    window.AFRAME.initialActivatedVRDisplay.requestPresent([{source: dummyCanvas}]).then(function () {
       // Per spec, subsequent calls to requestPresent,
       // with the proper layer(s), should now succeed without gesture.
       console.log('A-Frame: initial vrdisplayactivate, requestPresent succeeded');

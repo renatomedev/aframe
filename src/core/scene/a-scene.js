@@ -71,6 +71,15 @@ module.exports.AScene = registerElement('a-scene', {
         this.addEventListener('render-target-loaded', function () {
           this.setupRenderer();
           this.resize();
+
+          if (window.AFRAME.initialActivatedVRDisplay) {
+            console.log('A-Frame initially activated VRDisplay, so enterVR()');
+            this.enterVR();
+          }
+          window.AFRAME.cleanupInitialVRDisplayActivate();
+
+          // Now that the renderer is set up, enterVR() can succeed, so install normal handler.
+          window.addEventListener('vrdisplayactivate', this.enterVRBound);
         });
         this.addFullScreenStyles();
         initPostMessageAPI(this);
@@ -123,17 +132,8 @@ module.exports.AScene = registerElement('a-scene', {
         this.exitVRTrueBound = function () { self.exitVR(true); };
 
         // Enter VR on `vrdisplayactivate` (e.g. putting on Rift headset).
-        window.addEventListener('vrdisplayactivate', function () {
-          // With Oculus Browser, vrdisplayactivate fires before this.effect exists.
-          if (!self.effect) {
-            // Try again to enter VR next tick.
-            // NOTE: Using self.enterVRBound apparently no longer counts as user gesture.
-            setTimeout(function () { self.enterVR(); });
-          } else {
-            // Enter VR now.
-            self.enterVR();
-          }
-        });
+        // Don't do this now, we install a handler much earlier,
+        // and replace it shortly after `render-target-loaded`, which is when we can enter VR.
 
         // Exit VR on `vrdisplaydeactivate` (e.g. taking off Rift headset).
         window.addEventListener('vrdisplaydeactivate', this.exitVRBound);

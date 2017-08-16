@@ -113,3 +113,30 @@ module.exports = window.AFRAME = {
   utils: utils,
   version: pkg.version
 };
+
+window.AFRAME.initialVRDisplayActivate = function (evt) {
+  var display = evt && evt.display;
+  if (display) {
+    console.log('A-Frame: initial vrdisplayactivate, display', display.displayName);
+    // Remember the display that was activated.
+    window.AFRAME.initialActivatedVRDisplay = display;
+  }
+  if (window.AFRAME.initialActivatedVRDisplay) {
+    console.log('A-Frame: initial vrdisplayactivate, remembered display');
+    // Request presentation on the VRDisplay while we still have gesture permission.
+    window.AFRAME.initialActivatedVRDisplay.requestPresent([]).then(function () {
+      // Per spec, subsequent calls to requestPresent,
+      // with the proper layer(s), should now succeed without gesture.
+      console.log('A-Frame: initial vrdisplayactivate, requestPresent succeeded');
+    });
+  }
+};
+
+window.AFRAME.cleanupInitialVRDisplayActivate = function () {
+  window.removeEventListener('vrdisplayactivate', window.AFRAME.initialVRDisplayActivate);
+  delete window.AFRAME.initialActivatedVRDisplay;
+};
+
+// Attach event listener for vrdisplayactivate as early as possible.
+window.addEventListener('vrdisplayactivate', window.AFRAME.initialVRDisplayActivate);
+

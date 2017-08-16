@@ -49,6 +49,24 @@ suite('a-scene (without renderer)', function () {
     });
   });
 
+  suite('vrdisplayactivate', function () {
+    test('tells A-Frame about entering VR when the headset is activated', function (done) {
+      var event;
+      var sceneEl = this.el;
+      var enterVRStub = this.sinon.stub(sceneEl, 'enterVR');
+      var mockDisplay = {requestPresent: function () { console.log('mockDisplay'); return Promise.resolve(); }};
+      sceneEl.effect = {requestPresent: function () { return Promise.resolve(); }};
+      // We can't pass as event.display, so store the mock display.
+      AFRAME.initialActivatedVRDisplay = mockDisplay;
+      event = new CustomEvent('vrdisplayactivate');
+      window.dispatchEvent(event);
+      process.nextTick(function () {
+        assert.ok(enterVRStub.called);
+        done();
+      });
+    });
+  });
+
   suite('init', function () {
     test('initializes scene object', function () {
       var sceneEl = this.el;

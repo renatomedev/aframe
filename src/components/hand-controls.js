@@ -166,6 +166,7 @@ module.exports.Component = registerComponent('hand-controls', {
     };
     el.setAttribute('vive-controls', controlConfiguration);
     el.setAttribute('oculus-touch-controls', controlConfiguration);
+    el.setAttribute('spatial-controls', controlConfiguration);
 
     // Set model.
     if (hand !== previousHand) {

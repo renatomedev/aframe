@@ -20,6 +20,7 @@ require('./rotation');
 require('./scale');
 require('./shadow');
 require('./sound');
+require('./spatial-controls');
 require('./text');
 require('./tracked-controls');
 require('./visible');

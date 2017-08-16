@@ -16,6 +16,7 @@ registerComponent('laser-controls', {
     el.setAttribute('gearvr-controls', {hand: data.hand});
     el.setAttribute('oculus-touch-controls', {hand: data.hand});
     el.setAttribute('vive-controls', {hand: data.hand});
+    el.setAttribute('spatial-controls', {hand: data.hand});
 
     // Wait for controller to connect before
     el.addEventListener('controllerconnected', function (evt) {

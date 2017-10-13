@@ -32,9 +32,9 @@
   "dependencies": {
     "@tweenjs/tween.js": "^16.8.0",
     "browserify-css": "^0.8.2",
-    "debug": "ngokevin/debug#noTimestamp",
+    "debug": "github:ngokevin/debug#noTimestamp",
     "deep-assign": "^2.0.0",
-    "document-register-element": "dmarcos/document-register-element#8ccc532b7",
+    "document-register-element": "github:dmarcos/document-register-element#8ccc532b7",
     "envify": "^3.4.1",
     "load-bmfont": "^1.2.3",
     "object-assign": "^4.0.1",
@@ -43,7 +43,7 @@
     "style-attr": "^1.0.2",
     "three": "^0.87.0",
     "three-bmfont-text": "^2.1.0",
-    "webvr-polyfill": "chenzlabs/webvr-polyfill#mira"
+    "webvr-polyfill": "github:chenzlabs/webvr-polyfill#mira"
   },
   "devDependencies": {
     "browserify": "^13.1.0",
@@ -84,7 +84,7 @@
     "sinon": "^1.17.5",
     "sinon-chai": "2.8.0",
     "snazzy": "^5.0.0",
-    "too-wordy": "ngokevin/too-wordy",
+    "too-wordy": "github:ngokevin/too-wordy",
     "uglifyjs": "^2.4.10",
     "write-good": "^0.9.1"
   },

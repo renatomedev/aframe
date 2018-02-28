@@ -59,7 +59,7 @@ module.exports.registerElement = function (tagName, obj) {
   }
 
   // Give all functions their proper name.
-  for (var propName of Object.getOwnPropertyNames(newObj.prototype)) {
+  for (var propName in Object.getOwnPropertyNames(newObj.prototype)) {
     var propVal = newObj.prototype[propName];
     if (typeof propVal === 'function') {
       propVal.displayName = propName;

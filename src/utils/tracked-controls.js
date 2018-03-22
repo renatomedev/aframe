@@ -2,6 +2,15 @@ var DEFAULT_HANDEDNESS = require('../constants').DEFAULT_HANDEDNESS;
 var AXIS_LABELS = ['x', 'y', 'z', 'w'];
 var NUM_HANDS = 2; // Number of hands in a pair. Should always be 2.
 
+var splitOnPipeMap = {};
+
+function splitOnPipeOnce (stringToSplit) {
+  var rtn = splitOnPipeMap[stringToSplit];
+  if (rtn) { return rtn; }
+  rtn = splitOnPipeMap[stringToSplit] = stringToSplit.split('|');
+  return rtn;
+}
+
 /**
  * Called on controller component `.play` handlers.
  * Check if controller matches parameters and inject tracked-controls component.
@@ -90,19 +99,23 @@ function findMatchingController (controllers, filterIdExact, filterIdPrefix, fil
   var targetControllerMatch = filterControllerIndex || 0;
   var filterIdPrefixes;
   if (filterIdPrefix && filterIdPrefix.indexOf('|') >= 0) {
-    filterIdPrefixes = filterIdPrefix.split('|');
+    filterIdPrefixes = splitOnPipeOnce(filterIdPrefix);
   }
   for (i = 0; i < controllers.length; i++) {
     controller = controllers[i];
     // Determine if the controller ID matches our criteria
     if (filterIdPrefixes) {
       var matches = false;
-      for (var prefix in filterIdPrefixes) {
-        if (prefix && controller.id.indexOf(prefix) === -1) { matches = true; }
+      for (var j = 0; j < filterIdPrefixes.length; j++) {
+        var prefix = filterIdPrefixes[j];
+        if (prefix && controller.id.indexOf(prefix) === 0) {
+          matches = true;
+          break;
+        }
       }
       if (!matches) { continue; }
     } else
-    if (filterIdPrefix && controller.id.indexOf(filterIdPrefix) === -1) { continue; }
+    if (filterIdPrefix && controller.id.indexOf(filterIdPrefix) !== 0) { continue; }
     if (!filterIdPrefix && controller.id !== filterIdExact) { continue; }
 
     // If the hand filter and controller handedness are defined we compare them.
